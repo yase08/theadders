@@ -10,21 +10,73 @@ class ExchangeRepository implements ExchangeInterface
   public function requestExchange(array $data)
   {
     try {
-      $exchange = Exchange::create([
-        'product_id'   => $data['product_id'],
-        'to_product_id' => $data['to_product_id'],
-        'user_id'      => auth()->id(),
-        'to_user_id'   => $data['to_user_id'],
-        'status'       => 'Submission',
-        'author' => 'system'
-      ]);
+      $authUserId = auth()->id();
+      $targetUserId = $data['to_user_id'];
+      $productId = $data['product_id'];
+      $toProductId = $data['to_product_id'];
+
+      $existingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
+
+        $query->where('user_id', $authUserId)
+          ->where('to_user_id', $targetUserId)
+          ->where('product_id', $productId)
+          ->where('to_product_id', $toProductId);
+      })
+        ->orWhere(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
+
+          $query->where('user_id', $targetUserId)
+            ->where('to_user_id', $authUserId)
+            ->where('product_id', $toProductId)
+            ->where('to_product_id', $productId);
+        })
+        ->where('status', 'Approve')
+        ->first();
+
+
+      if ($existingExchange) {
+        $exchange = $existingExchange;
+
+        \Log::info('Using existing approved exchange: ' . $existingExchange->exchange_id);
+      } else {
+
+        $pendingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
+          $query->where('user_id', $authUserId)
+            ->where('to_user_id', $targetUserId)
+            ->where('product_id', $productId)
+            ->where('to_product_id', $toProductId);
+        })
+          ->orWhere(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
+            $query->where('user_id', $targetUserId)
+              ->where('to_user_id', $authUserId)
+              ->where('product_id', $toProductId)
+              ->where('to_product_id', $productId);
+          })
+          ->where('status', '!=', 'Approve')
+          ->latest()
+          ->first();
+
+        if ($pendingExchange) {
+
+          throw new \Exception('There is already a pending exchange request for these products. Please wait for it to be processed.');
+        }
+
+        $exchange = Exchange::create([
+          'product_id'    => $productId,
+          'to_product_id' => $toProductId,
+          'user_id'       => $authUserId,
+          'to_user_id'    => $targetUserId,
+          'status'        => 'Submission',
+          'author'        => 'system'
+        ]);
+
+        \Log::info('Created new exchange request: ' . $exchange->exchange_id);
+      }
 
       return $exchange;
     } catch (\Exception $e) {
       throw new \Exception('Unable to request exchange: ' . $e->getMessage());
     }
   }
-
 
   public function approveExchange(int $exchangeId)
   {
@@ -71,7 +123,7 @@ class ExchangeRepository implements ExchangeInterface
       $exchanges = Exchange::where('user_id', $userId)
         ->orWhere('to_user_id', $userId)
         ->orderBy('created', 'desc')
-        ->with(['requesterProduct', 'receiverProduct']) // Tambahkan relasi produk
+        ->with(['requesterProduct', 'receiverProduct'])
         ->get();
 
       return $exchanges;
