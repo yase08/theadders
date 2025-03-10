@@ -55,6 +55,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/decline-exchange/{exchange_id}', [ExchangeController::class, 'declineExchange']);
     Route::get('/exchanges', [ExchangeController::class, 'getUserExchanges']);
     Route::get('/exchanges/incoming', [ExchangeController::class, 'getIncomingExchanges']);
+    Route::get('/exchanges/outgoing', [ExchangeController::class, 'getOutgoingExchanges']);
     Route::get('/exchange/{exchange_id}', [ExchangeController::class, 'getExchangeById']);
 });
 // exchange end

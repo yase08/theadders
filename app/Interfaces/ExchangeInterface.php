@@ -14,5 +14,7 @@ interface ExchangeInterface
 
   public function getIncomingExchanges();
 
+  public function getOutgoingExchanges();
+
   public function getExchangeById(int $exchangeId);
 }

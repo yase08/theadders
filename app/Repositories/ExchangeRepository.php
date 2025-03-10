@@ -165,4 +165,26 @@ class ExchangeRepository implements ExchangeInterface
       throw new \Exception('Unable to get incoming exchange requests: ' . $e->getMessage());
     }
   }
+
+  public function getOutgoingExchanges()
+  {
+    try {
+      $userId = auth()->id();
+
+      $exchanges = Exchange::where('user_id', $userId)
+        ->where('status', 'Submission')
+        ->with([
+          'requesterProduct',
+          'receiverProduct',
+          'requester',
+          'receiver'
+        ])
+        ->orderBy('created', 'desc')
+        ->get();
+
+      return $exchanges;
+    } catch (\Exception $e) {
+      throw new \Exception('Unable to get outgoing exchange requests: ' . $e->getMessage());
+    }
+  }
 }
