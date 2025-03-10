@@ -43,7 +43,7 @@ Route::get('/category-subs', [CategorySubController::class, 'index']);
 Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/product', [ProductController::class, 'storeProduct']);
     Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/my-products', [ProductController::class, 'myProducts']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
 });
 // product end
 
@@ -59,7 +59,6 @@ Route::middleware('auth:api')->group(function () {
 
 // chat start
 Route::middleware('auth:api')->group(function () {
-    // Chat routes
     Route::post('/messages/send', [MessageController::class, 'sendMessage']);
     Route::get('/messages/chats', [MessageController::class, 'getChatList']);
     Route::get('/messages/history', [MessageController::class, 'getChatHistory']);

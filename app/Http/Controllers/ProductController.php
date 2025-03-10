@@ -77,4 +77,14 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function show($id)
+    {
+        try {
+            $product = $this->productCategoryRepository->getProductDetail($id);
+            return ApiResponseClass::sendResponse($product, 'success', 200);
+        } catch (\Exception $e) {
+            return ApiResponseClass::sendResponse(null, $e->getMessage(), 404);
+        }
+    }
 }

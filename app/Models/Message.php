@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
+    protected $primaryKey = 'chat_id';
+
     protected $fillable = ['sender_id', 'receiver_id', 'message', 'status', 'exchange_id'];
 
     public function sender()

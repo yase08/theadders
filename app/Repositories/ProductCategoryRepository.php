@@ -132,4 +132,20 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
         return $query->get();
     }
+
+    public function getProductDetail($productId)
+    {
+        try {
+            $product = Product::with(['category', 'categorySub', 'user'])
+                ->where('product_id', $productId)
+                ->firstOrFail();
+
+            // Increment view count
+            $product->increment('view_count');
+
+            return $product;
+        } catch (\Exception $e) {
+            throw new \Exception('Unable to fetch product details: ' . $e->getMessage());
+        }
+    }
 }

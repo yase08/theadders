@@ -127,9 +127,6 @@ class MessageController extends Controller
         }
     }
 
-
-
-
     public function getChatHistory(Request $request)
     {
         $request->validate([

@@ -11,4 +11,5 @@ interface ProductCategoryInterface
     public function getSubCategories(array $filters);
     public function storeCategory(array $data);
     public function storeSubCategory(array $data);
+    public function getProductDetail($productId);
 }
