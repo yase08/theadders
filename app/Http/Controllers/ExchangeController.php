@@ -176,4 +176,21 @@ class ExchangeController extends Controller
       ], 500);
     }
   }
+
+  public function getIncomingExchanges()
+  {
+    try {
+      $exchanges = $this->exchangeInterface->getIncomingExchanges();
+      return response()->json([
+        'success' => true,
+        'data' => $exchanges,
+        'message' => 'success'
+      ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
 }

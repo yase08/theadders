@@ -82,9 +82,16 @@ class ProductController extends Controller
     {
         try {
             $product = $this->productCategoryRepository->getProductDetail($id);
-            return ApiResponseClass::sendResponse($product, 'success', 200);
+            return response()->json([
+                'success' => true,
+                'data' => $product,
+                'message' => 'success'
+            ]);
         } catch (\Exception $e) {
-            return ApiResponseClass::sendResponse(null, $e->getMessage(), 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving product: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

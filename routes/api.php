@@ -43,6 +43,7 @@ Route::get('/category-subs', [CategorySubController::class, 'index']);
 Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/product', [ProductController::class, 'storeProduct']);
     Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/my-products', [ProductController::class, 'myProducts']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
 });
 // product end
@@ -53,6 +54,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/approve-exchange/{exchange_id}', [ExchangeController::class, 'approveExchange']);
     Route::put('/decline-exchange/{exchange_id}', [ExchangeController::class, 'declineExchange']);
     Route::get('/exchanges', [ExchangeController::class, 'getUserExchanges']);
+    Route::get('/exchanges/incoming', [ExchangeController::class, 'getIncomingExchanges']);
     Route::get('/exchange/{exchange_id}', [ExchangeController::class, 'getExchangeById']);
 });
 // exchange end

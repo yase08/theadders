@@ -143,4 +143,26 @@ class ExchangeRepository implements ExchangeInterface
       throw new \Exception('Unable to get exchange by id: ' . $e->getMessage());
     }
   }
+
+  public function getIncomingExchanges()
+  {
+    try {
+      $userId = auth()->id();
+
+      $exchanges = Exchange::where('to_user_id', $userId)
+        ->where('status', 'Submission')
+        ->with([
+          'requesterProduct',
+          'receiverProduct',
+          'requester',
+          'receiver'
+        ])
+        ->orderBy('created', 'desc')
+        ->get();
+
+      return $exchanges;
+    } catch (\Exception $e) {
+      throw new \Exception('Unable to get incoming exchange requests: ' . $e->getMessage());
+    }
+  }
 }
