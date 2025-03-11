@@ -197,14 +197,13 @@ class ExchangeController extends Controller
   public function getOutgoingExchanges()
   {
     try {
-      $exchanges = $this->exchangeRepository->getOutgoingExchanges();
+      $exchanges = $this->exchangeInterface->getOutgoingExchanges();
       return response()->json([
         'success' => true,
         'data' => $exchanges,
         'message' => 'success'
       ]);
     } catch (\Throwable $th) {
-
       return response()->json([
         'message' => 'error',
         'error' => $th->getMessage()
