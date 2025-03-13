@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
+// AuthController
+
 class AuthController extends Controller
 {
     private UserRepositoryInterface $userRepositoryInterface;
