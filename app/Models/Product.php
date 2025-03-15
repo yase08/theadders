@@ -53,6 +53,12 @@ class Product extends Model
         return $this->belongsTo(User::class, 'author');
     }
 
+    public function productImages()
+    {
+        return $this->hasMany(ProductImage::class, 'product_id', 'product_id')
+            ->where('status', 1); // Only get active images
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['category_id'] ?? false, function ($query, $categoryId) {

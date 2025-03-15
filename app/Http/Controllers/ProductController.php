@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    private ProductCategoryInterface $productCategoryRepository;
+    private ProductCategoryInterface $productCategoryInterface;
 
-    public function __construct(ProductCategoryInterface $userRepositoryInterface)
+    public function __construct(ProductCategoryInterface $productCategoryInterface)
     {
-        $this->productCategoryRepository = $userRepositoryInterface;
+        $this->productCategoryInterface = $productCategoryInterface;
     }
 
     public function storeProduct(ProductRequest $request)
@@ -24,11 +24,22 @@ class ProductController extends Controller
 
             $validatedData = $request->validated();
 
+            // Handle thumbnail upload
             if ($request->hasFile('thumbail')) {
                 $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
             }
 
-            $product = $this->productCategoryRepository->storeProduct($validatedData);
+            // Handle multiple product images
+            if ($request->hasFile('product_images')) {
+                $productImages = [];
+                foreach ($request->file('product_images') as $image) {
+                    $filename = $image->store('product_images', 'public');
+                    $productImages[] = $filename;
+                }
+                $validatedData['product_images'] = $productImages;
+            }
+
+            $product = $this->productCategoryInterface->storeProduct($validatedData);
 
             DB::commit();
             return response()->json([
@@ -50,7 +61,7 @@ class ProductController extends Controller
         try {
             $validatedData = $request->validated();
 
-            $products = $this->productCategoryRepository->getProducts($validatedData);
+            $products = $this->productCategoryInterface->getProducts($validatedData);
             return response()->json([
                 'message' => 'success',
                 'data' => $products
@@ -63,7 +74,7 @@ class ProductController extends Controller
     public function myProducts(ProductIndexRequest $request)
     {
         try {
-            $products = $this->productCategoryRepository->getUserProducts($request->validated());
+            $products = $this->productCategoryInterface->getUserProducts($request->validated());
 
             return response()->json([
                 'success' => true,
@@ -81,7 +92,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = $this->productCategoryRepository->getProductDetail($id);
+            $product = $this->productCategoryInterface->getProductDetail($id);
             return response()->json([
                 'success' => true,
                 'data' => $product,

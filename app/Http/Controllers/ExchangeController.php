@@ -7,6 +7,7 @@ use App\Interfaces\ExchangeInterface;
 use App\Models\User;
 use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 // ExchangeController
 
@@ -36,12 +37,10 @@ class ExchangeController extends Controller
 
       if (!$receiver) {
         \Log::error('Penyewa tidak ditemukan.');
-        return response()->json(['message' => 'User tidak ditemukan'], 404);
+        return response()->json(['message' => 'Receiver not found'], 404);
       }
 
       \Log::info('User yang login:', ['user' => auth()->user()]);
-
-      \Log::info('mencoba kirim: '); // Log sukses
 
       \Log::info('fcm_token: ', ['token' => $receiver->fcm_token]);
 
@@ -51,8 +50,8 @@ class ExchangeController extends Controller
         \Log::info('notif terkirim: '); // Log sukses
         $this->firebaseService->sendNotification(
           $receiver->fcm_token,
-          "Permintaan Exchange",
-          "Kamu mendapatkan permintaan exchange baru dari " . auth()->user()->fullname,
+          "Exchange Request",
+          "You have received a new exchange request from " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
             'type' => 'exchange_request'
@@ -87,8 +86,8 @@ class ExchangeController extends Controller
       if ($requester && $requester->fcm_token) {
         $this->firebaseService->sendNotification(
           $requester->fcm_token,
-          "Exchange Disetujui",
-          "Permintaan exchange kamu telah disetujui oleh " . auth()->user()->fullname,
+          "Exchange Approved",
+          "Your exchange request has been approved by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
             'type' => 'exchange_request'
@@ -123,8 +122,8 @@ class ExchangeController extends Controller
       if ($requester && $requester->fcm_token) {
         $this->firebaseService->sendNotification(
           $requester->fcm_token,
-          "Exchange Ditolak",
-          "Permintaan exchange kamu telah ditolak oleh " . auth()->user()->fullname,
+          "Exchange Rejected",
+          "Your exchange request has been rejected by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
             'type' => 'exchange_request'
@@ -205,6 +204,50 @@ class ExchangeController extends Controller
         'data' => $exchanges,
         'message' => 'success'
       ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
+
+  public function finalizeExchange(Request $request, $exchangeId)
+  {
+    try {
+      $request->validate([
+        'status' => 'required|in:Completed,Cancelled'
+      ]);
+
+      $exchange = $this->exchangeInterface->finalizeExchange(
+        $exchangeId,
+        $request->status
+      );
+
+      // Send notification to other user
+      $otherUserId = auth()->id() === $exchange->user_id
+        ? $exchange->to_user_id
+        : $exchange->user_id;
+
+      $otherUser = User::find($otherUserId);
+
+      if ($otherUser && $otherUser->fcm_token) {
+        $statusText = $request->status === 'Completed' ? 'completed' : 'cancelled';
+        $this->firebaseService->sendNotification(
+          $otherUser->fcm_token,
+          "Exchange $statusText",
+          "The exchange has been $statusText by " . auth()->user()->fullname,
+          [
+            'exchange_id' => $exchange->id,
+            'type' => 'exchange_finalized'
+          ]
+        );
+      }
+
+      return response()->json([
+        'message' => 'success',
+        'exchange' => $exchange
+      ], 200);
     } catch (\Throwable $th) {
       return response()->json([
         'message' => 'error',

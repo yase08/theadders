@@ -6,6 +6,9 @@ use App\Http\Controllers\CategorySubController;
 use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RatingController;
+use App\Http\Controllers\UserFollowController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JwtMiddleware;
@@ -57,6 +60,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/exchanges/incoming', [ExchangeController::class, 'getIncomingExchanges']);
     Route::get('/exchanges/outgoing', [ExchangeController::class, 'getOutgoingExchanges']);
     Route::get('/exchange/{exchange_id}', [ExchangeController::class, 'getExchangeById']);
+    Route::put('/finalize-exchange/{exchange_id}', [ExchangeController::class, 'finalizeExchange']);
 });
 // exchange end
 
@@ -66,5 +70,30 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/messages/chats', [MessageController::class, 'getChatList']);
     Route::get('/messages/history', [MessageController::class, 'getChatHistory']);
     Route::post('/messages/status', [MessageController::class, 'updateMessageStatus']);
+    Route::post('/messages/client-status', [MessageController::class, 'updateClientStatus']);
 });
 // chat end
+
+Route::middleware('auth:api')->group(function () {
+    // User Follow routes
+    Route::post('/users/{userId}/follow', [UserFollowController::class, 'follow']);
+    Route::delete('/users/{userId}/unfollow', [UserFollowController::class, 'unfollow']);
+    Route::get('/users/{userId}/followers', [UserFollowController::class, 'followers']);
+    Route::get('/users/{userId}/following', [UserFollowController::class, 'following']);
+    Route::get('/users/{userId}/follow-status', [UserFollowController::class, 'checkFollow']);
+});
+
+Route::middleware('auth:api')->group(function () {
+    // Wishlist routes
+    Route::post('/wishlist', [WishlistController::class, 'addToWishlist']);
+    Route::delete('/wishlist/{productId}', [WishlistController::class, 'removeFromWishlist']);
+    Route::get('/wishlist', [WishlistController::class, 'getUserWishlist']);
+    Route::get('/wishlist/check/{productId}', [WishlistController::class, 'checkWishlist']);
+});
+
+Route::middleware('auth:api')->group(function () {
+    // Rating routes
+    Route::post('/rate-exchange', [RatingController::class, 'rateExchangeProduct']);
+    Route::get('/product/{productId}/ratings', [RatingController::class, 'getProductRatings']);
+    Route::get('/user/{userId}/ratings', [RatingController::class, 'getUserRatings']);
+});

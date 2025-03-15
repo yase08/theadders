@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 use App\Classes\ApiResponseClass;
 use App\Models\Exchange;
 
-// MessageController
-
 class MessageController extends Controller
 {
     protected $firebaseService;
@@ -45,16 +43,91 @@ class MessageController extends Controller
                 'status' => 'sent'
             ]);
 
+            // Check if receiver is active in this chat
+            $isReceiverActive = $this->firebaseService->isUserActiveInChat(
+                $receiver->users_id,
+                $sender->users_id,
+                $request->exchange_id
+            );
+
+            // Send message to Firebase with notification control
             $this->firebaseService->sendMessage([
                 'sender' => $sender,
                 'receiver' => $receiver,
                 'message' => $request->message,
-                'exchange_id' => $request->exchange_id
-            ]);
+                'exchange_id' => $request->exchange_id,
+                'client_status' => $isReceiverActive ? 'chat_open' : 'chat_closed'
+            ], !$isReceiverActive); // Only send notification if receiver is not active in chat
 
             return ApiResponseClass::sendResponse($message, 'success', 201);
         } catch (\Exception $e) {
             return ApiResponseClass::sendResponse(null, 'Failed to send message: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function getChatHistory(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,users_id',
+            'exchange_id' => 'required|exists:trs_exchange,exchange_id'
+        ]);
+
+        try {
+            // Update user's active chat status in Firebase
+            $this->firebaseService->updateClientStatus(auth()->id(), [
+                'status' => 'chat_open',
+                'active_chat' => [
+                    'user_id' => $request->user_id,
+                    'exchange_id' => $request->exchange_id
+                ]
+            ]);
+
+            $messages = Message::where('exchange_id', $request->exchange_id)
+                ->where(function ($query) use ($request) {
+                    $query->where(function ($q) use ($request) {
+                        $q->where('sender_id', auth()->id())
+                            ->where('receiver_id', $request->user_id);
+                    })->orWhere(function ($q) use ($request) {
+                        $q->where('sender_id', $request->user_id)
+                            ->where('receiver_id', auth()->id());
+                    });
+                })
+                ->with(['sender', 'receiver'])
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            return ApiResponseClass::sendResponse($messages, 'success', 200);
+        } catch (\Exception $e) {
+            return ApiResponseClass::sendResponse(null, 'Failed to get chat history: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function updateClientStatus(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|string|in:app_open,app_closed,chat_open,chat_closed',
+            'other_user_id' => 'nullable|exists:users,users_id',
+            'exchange_id' => 'nullable|exists:trs_exchange,exchange_id'
+        ]);
+
+        try {
+            $userId = auth()->id();
+            $status = $request->status;
+            $otherUserId = $request->other_user_id;
+            $exchangeId = $request->exchange_id;
+
+            // Update status in Firebase
+            $this->firebaseService->updateClientStatus($userId, [
+                'status' => $status,
+                'active_chat' => $status === 'chat_open' ? [
+                    'user_id' => $otherUserId,
+                    'exchange_id' => $exchangeId
+                ] : null
+            ]);
+
+            return ApiResponseClass::sendResponse(['status' => 'updated'], 'success', 200);
+        } catch (\Exception $e) {
+            return ApiResponseClass::sendResponse(null, 'Failed to update client status: ' . $e->getMessage(), 500);
         }
     }
 
@@ -126,31 +199,6 @@ class MessageController extends Controller
             return ApiResponseClass::sendResponse($chatList, 'success', 200);
         } catch (\Exception $e) {
             return ApiResponseClass::sendResponse(null, 'Failed to get chat list: ' . $e->getMessage(), 500);
-        }
-    }
-
-    public function getChatHistory(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,users_id'
-        ]);
-
-        try {
-            $messages = Message::where(function ($query) use ($request) {
-                $query->where('sender_id', auth()->id())
-                    ->where('receiver_id', $request->user_id);
-            })
-                ->orWhere(function ($query) use ($request) {
-                    $query->where('sender_id', $request->user_id)
-                        ->where('receiver_id', auth()->id());
-                })
-                ->with(['sender', 'receiver'])
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            return ApiResponseClass::sendResponse($messages, 'success', 200);
-        } catch (\Exception $e) {
-            return ApiResponseClass::sendResponse(null, 'Failed to get chat history: ' . $e->getMessage(), 500);
         }
     }
 }

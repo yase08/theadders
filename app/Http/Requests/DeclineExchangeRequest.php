@@ -37,9 +37,10 @@ class DeclineExchangeRequest extends FormRequest
   public function messages(): array
   {
     return [
-      'exchange_id.required' => 'Exchange ID diperlukan.',
-      'exchange_id.integer'  => 'Exchange ID harus berupa angka.',
-      'exchange_id.exists'   => 'Exchange yang dipilih tidak ada.',
-    ];
+      'exchange_id.required' => 'Exchange ID is required.',
+      'exchange_id.integer'  => 'Exchange ID must be a number.',
+      'exchange_id.exists'   => 'The selected exchange does not exist.',
+  ];
+  
   }
 }

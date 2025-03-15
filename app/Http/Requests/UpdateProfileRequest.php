@@ -24,9 +24,9 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'avatar.image' => 'File yang diunggah harus berupa gambar.',
-            'avatar.max' => 'Size foto profile tidak boleh lebih dari 5MB.',
-            'avatar.mimes' => 'Tipe foto profile harus: jpeg, png, jpg.',
-        ];
+            'avatar.image' => 'The uploaded file must be an image.',
+            'avatar.max' => 'Profile photo size must not exceed 5MB.',
+            'avatar.mimes' => 'Profile photo must be of type: jpeg, png, jpg.',
+        ];        
     }
 }

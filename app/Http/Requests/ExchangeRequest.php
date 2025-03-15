@@ -29,7 +29,7 @@ class ExchangeRequest extends FormRequest
         'exists:tabel_product,product_id',
         function ($attribute, $value, $fail) {
           if (!Product::where('product_id', $value)->where('author', auth()->id())->exists()) {
-            $fail('Produk ini bukan milik Anda.');
+            $fail('This product does not belong to you.');
           }
         },
       ],
@@ -38,7 +38,7 @@ class ExchangeRequest extends FormRequest
         'exists:tabel_product,product_id',
         function ($attribute, $value, $fail) {
           if (Product::where('product_id', $value)->where('author', auth()->id())->exists()) {
-            $fail('Produk tujuan tidak boleh milik Anda sendiri.');
+            $fail('The target product cannot be your own.');
           }
         },
       ],
@@ -47,7 +47,7 @@ class ExchangeRequest extends FormRequest
         'exists:users,users_id',
         function ($attribute, $value, $fail) {
           if ($value == auth()->id()) {
-            $fail('Anda tidak bisa bertukar dengan diri sendiri.');
+            $fail('You cannot exchange with yourself.');
           }
         },
       ],
@@ -60,17 +60,17 @@ class ExchangeRequest extends FormRequest
   public function messages(): array
   {
     return [
-      'product_id.required'    => 'Product ID diperlukan.',
-      'product_id.integer'     => 'Product ID harus berupa angka.',
-      'product_id.exists'      => 'Produk yang dipilih tidak ada.',
+      'product_id.required'    => 'Product ID is required.',
+      'product_id.integer'     => 'Product ID must be a number.',
+      'product_id.exists'      => 'The selected product does not exist.',
 
-      'to_product_id.required' => 'Target Product ID diperlukan.',
-      'to_product_id.integer'  => 'Target Product ID harus berupa angka.',
-      'to_product_id.exists'   => 'Produk tujuan yang dipilih tidak ada.',
+      'to_product_id.required' => 'Target Product ID is required.',
+      'to_product_id.integer'  => 'Target Product ID must be a number.',
+      'to_product_id.exists'   => 'The selected target product does not exist.',
 
-      'to_user_id.required'    => 'Penerima user ID diperlukan.',
-      'to_user_id.integer'     => 'Penerima user ID harus berupa angka.',
-      'to_user_id.exists'      => 'Penerima user yang dipilih tidak ada.',
+      'to_user_id.required'    => 'Recipient user ID is required.',
+      'to_user_id.integer'     => 'Recipient user ID must be a number.',
+      'to_user_id.exists'      => 'The selected recipient user does not exist.',
     ];
   }
 }

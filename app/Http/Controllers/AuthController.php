@@ -9,6 +9,8 @@ use App\Http\Requests\SignUpRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Interfaces\UserRepositoryInterface;
+use App\Models\ProductLove;
+use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -130,8 +132,18 @@ class AuthController extends Controller
     {
         try {
             $user = auth()->user();
+            $userStats = $this->getUserStats($user->users_id);
+
+            $response = (new UserResource($user))->additional([
+                'stats' => [
+                    'followers_count' => $userStats['followers_count'],
+                    'wishlist_count' => $userStats['wishlist_count'],
+                    'products_count' => $userStats['products_count']
+                ]
+            ]);
+
             return ApiResponseClass::sendResponse(
-                new UserResource($user),
+                $response,
                 "success",
                 200
             );
@@ -142,6 +154,15 @@ class AuthController extends Controller
                 500
             );
         }
+    }
+
+    private function getUserStats($userId)
+    {
+        return [
+            'followers_count' => UserFollow::where('users_id', $userId)->count(),
+            'wishlist_count' => ProductLove::where('user_id', $userId)->where('status', 1)->count(),
+            'products_count' => ProductLove::where('author', $userId)->count()
+        ];
     }
 
     public function updateFcmToken(Request $request)

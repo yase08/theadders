@@ -7,13 +7,14 @@ use App\Models\Categories;
 use App\Models\Product;
 use App\Models\CategorySub;
 use App\Models\User;
+use App\Models\ProductView;
 
 class ProductCategoryRepository implements ProductCategoryInterface
 {
     public function storeProduct($productData)
     {
         try {
-            return Product::create([
+            $product = Product::create([
                 'category_id' => $productData['category_id'],
                 'category_sub_id' => $productData['category_sub_id'],
                 'product_name' => $productData['product_name'],
@@ -28,6 +29,21 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'author' => auth()->id(),
                 'status' => $productData['status'],
             ]);
+
+            // Store product images if provided
+            if (isset($productData['product_images']) && is_array($productData['product_images'])) {
+                foreach ($productData['product_images'] as $image) {
+                    ProductImage::create([
+                        'product_id' => $product->product_id,
+                        'file_image' => $image,
+                        'created' => now(),
+                        'author' => auth()->id(),
+                        'status' => 1 // Active status
+                    ]);
+                }
+            }
+
+            return $product->load('productImages');
         } catch (\Exception $e) {
             throw new \Exception('Unable to store product: ' . $e->getMessage());
         }
@@ -136,16 +152,39 @@ class ProductCategoryRepository implements ProductCategoryInterface
     public function getProductDetail($productId)
     {
         try {
-            $product = Product::with(['category', 'categorySub', 'user'])
+            $product = Product::with(['category', 'categorySub', 'user', 'productImages'])
                 ->where('product_id', $productId)
                 ->firstOrFail();
 
             // Increment view count
             $product->increment('view_count');
 
+            // Track product view
+            $this->trackProductView($product->product_id);
+
             return $product;
         } catch (\Exception $e) {
             throw new \Exception('Unable to fetch product details: ' . $e->getMessage());
+        }
+    }
+
+    private function trackProductView($productId)
+    {
+        try {
+            $request = request();
+            
+            ProductView::create([
+                'product_id' => $productId,
+                'useragent' => $request->userAgent(),
+                'page' => $request->path(),
+                'remote_addr' => $request->ip(),
+                'x_forwarded_for' => $request->header('X-Forwarded-For'),
+                'created' => now(),
+                'author' => auth()->check() ? auth()->id() : 'guest',
+                'status' => 1
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to track product view: ' . $e->getMessage());
         }
     }
 }

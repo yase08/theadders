@@ -27,13 +27,13 @@ class ProductIndexRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_id.exists' => 'Kategori yang dipilih tidak ditemukan',
-            'category_sub_id.exists' => 'Sub Kategori yang dipilih tidak ditemukan',
-            'sort.in' => 'Parameter sort tidak sesuai',
-            'size.in' => 'Size harus berisi small, medium, large',
-            'price_range.in' => 'Range harga tidak sesuai',
-            'per_page.integer' => 'Per page harus berupa angka',
-            'per_page.min' => 'Per page minimal 1',
-        ];
+            'category_id.exists' => 'The selected category was not found.',
+            'category_sub_id.exists' => 'The selected subcategory was not found.',
+            'sort.in' => 'The sort parameter is invalid.',
+            'size.in' => 'Size must be small, medium, or large.',
+            'price_range.in' => 'The price range is invalid.',
+            'per_page.integer' => 'Per page must be a number.',
+            'per_page.min' => 'Per page must be at least 1.',
+        ];        
     }
 }

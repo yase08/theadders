@@ -187,4 +187,36 @@ class ExchangeRepository implements ExchangeInterface
       throw new \Exception('Unable to get outgoing exchange requests: ' . $e->getMessage());
     }
   }
+
+  public function finalizeExchange(int $exchangeId, string $status)
+  {
+    try {
+      $exchange = Exchange::with(['requesterProduct', 'receiverProduct'])
+        ->findOrFail($exchangeId);
+
+      if ($exchange->status !== 'Approve') {
+        throw new \Exception('Exchange must be approved first');
+      }
+
+      $userId = auth()->id();
+      if ($userId !== $exchange->user_id && $userId !== $exchange->to_user_id) {
+        throw new \Exception('Unauthorized action');
+      }
+
+      $exchange->update([
+        'status' => $status,
+        'completed_at' => now()
+      ]);
+
+      if ($status === 'Completed') {
+        // Update both products status to indicate they've been exchanged
+        $exchange->requesterProduct->update(['exchange_status' => 'Exchanged']);
+        $exchange->receiverProduct->update(['exchange_status' => 'Exchanged']);
+      }
+
+      return $exchange->fresh(['requesterProduct', 'receiverProduct']);
+    } catch (\Exception $e) {
+      throw new \Exception('Unable to finalize exchange: ' . $e->getMessage());
+    }
+  }
 }
