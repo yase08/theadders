@@ -208,12 +208,6 @@ class ExchangeRepository implements ExchangeInterface
         'completed_at' => now()
       ]);
 
-      if ($status === 'Completed') {
-        // Update both products status to indicate they've been exchanged
-        $exchange->requesterProduct->update(['exchange_status' => 'Exchanged']);
-        $exchange->receiverProduct->update(['exchange_status' => 'Exchanged']);
-      }
-
       return $exchange->fresh(['requesterProduct', 'receiverProduct']);
     } catch (\Exception $e) {
       throw new \Exception('Unable to finalize exchange: ' . $e->getMessage());

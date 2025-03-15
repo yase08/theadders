@@ -10,6 +10,9 @@ class Exchange extends Model
   protected $table = 'trs_exchange';
   protected $primaryKey = 'exchange_id';
   public $timestamps = false;
+  protected $dates = [
+    'completed_at'
+  ];
 
   protected $fillable = [
     'product_id',
@@ -18,7 +21,8 @@ class Exchange extends Model
     'to_user_id',
     'status',
     'author',
-    'created'
+    'created',
+    'completed_at'
   ];
 
   public function requesterProduct()
