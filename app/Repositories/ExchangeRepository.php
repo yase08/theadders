@@ -188,7 +188,7 @@ class ExchangeRepository implements ExchangeInterface
     }
   }
 
-  public function finalizeExchange(int $exchangeId, string $status)
+  public function completeExchange(int $exchangeId)
   {
     try {
       $exchange = Exchange::with(['requesterProduct', 'receiverProduct'])
@@ -204,13 +204,39 @@ class ExchangeRepository implements ExchangeInterface
       }
 
       $exchange->update([
-        'status' => $status,
+        'status' => 'Completed',
         'completed_at' => now()
       ]);
 
       return $exchange->fresh(['requesterProduct', 'receiverProduct']);
     } catch (\Exception $e) {
-      throw new \Exception('Unable to finalize exchange: ' . $e->getMessage());
+      throw new \Exception('Unable to complete exchange: ' . $e->getMessage());
+    }
+  }
+
+  public function cancelExchange(int $exchangeId)
+  {
+    try {
+      $exchange = Exchange::with(['requesterProduct', 'receiverProduct'])
+        ->findOrFail($exchangeId);
+
+      if ($exchange->status !== 'Approve') {
+        throw new \Exception('Exchange must be approved first');
+      }
+
+      $userId = auth()->id();
+      if ($userId !== $exchange->user_id && $userId !== $exchange->to_user_id) {
+        throw new \Exception('Unauthorized action');
+      }
+
+      $exchange->update([
+        'status' => 'Cancelled',
+        'completed_at' => now()
+      ]);
+
+      return $exchange->fresh(['requesterProduct', 'receiverProduct']);
+    } catch (\Exception $e) {
+      throw new \Exception('Unable to cancel exchange: ' . $e->getMessage());
     }
   }
 }

@@ -60,7 +60,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/exchanges/incoming', [ExchangeController::class, 'getIncomingExchanges']);
     Route::get('/exchanges/outgoing', [ExchangeController::class, 'getOutgoingExchanges']);
     Route::get('/exchange/{exchange_id}', [ExchangeController::class, 'getExchangeById']);
-    Route::put('/finalize-exchange/{exchange_id}', [ExchangeController::class, 'finalizeExchange']);
+    Route::post('/exchange/{exchangeId}/complete', [ExchangeController::class, 'completeExchange']);
+    Route::post('/exchange/{exchangeId}/cancel', [ExchangeController::class, 'cancelExchange']);
 });
 // exchange end
 

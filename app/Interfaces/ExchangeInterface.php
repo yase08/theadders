@@ -18,5 +18,7 @@ interface ExchangeInterface
 
   public function getExchangeById(int $exchangeId);
 
-  public function finalizeExchange(int $exchangeId, string $status);
+  public function completeExchange(int $exchangeId);
+
+  public function cancelExchange(int $exchangeId);
 }

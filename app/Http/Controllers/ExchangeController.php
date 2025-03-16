@@ -212,17 +212,14 @@ class ExchangeController extends Controller
     }
   }
 
-  public function finalizeExchange(Request $request, $exchangeId)
+  public function completeExchange($exchangeId)
   {
     try {
-      $request->validate([
-        'status' => 'required|in:Completed,Cancelled'
-      ]);
+      DB::beginTransaction();
 
-      $exchange = $this->exchangeInterface->finalizeExchange(
-        $exchangeId,
-        $request->status
-      );
+      $exchange = $this->exchangeInterface->completeExchange($exchangeId);
+
+      DB::commit();
 
       // Send notification to other user
       $otherUserId = auth()->id() === $exchange->user_id
@@ -232,14 +229,13 @@ class ExchangeController extends Controller
       $otherUser = User::find($otherUserId);
 
       if ($otherUser && $otherUser->fcm_token) {
-        $statusText = $request->status === 'Completed' ? 'completed' : 'cancelled';
         $this->firebaseService->sendNotification(
           $otherUser->fcm_token,
-          "Exchange $statusText",
-          "The exchange has been $statusText by " . auth()->user()->fullname,
+          "Exchange Completed",
+          "The exchange has been completed by " . auth()->user()->fullname,
           [
-            'exchange_id' => $exchange->id,
-            'type' => 'exchange_finalized'
+            'exchange_id' => $exchange->exchange_id,
+            'type' => 'exchange_completed'
           ]
         );
       }
@@ -249,6 +245,48 @@ class ExchangeController extends Controller
         'exchange' => $exchange
       ], 200);
     } catch (\Throwable $th) {
+      DB::rollBack();
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
+
+  public function cancelExchange($exchangeId)
+  {
+    try {
+      DB::beginTransaction();
+
+      $exchange = $this->exchangeInterface->cancelExchange($exchangeId);
+
+      DB::commit();
+
+      // Send notification to other user
+      $otherUserId = auth()->id() === $exchange->user_id
+        ? $exchange->to_user_id
+        : $exchange->user_id;
+
+      $otherUser = User::find($otherUserId);
+
+      if ($otherUser && $otherUser->fcm_token) {
+        $this->firebaseService->sendNotification(
+          $otherUser->fcm_token,
+          "Exchange Cancelled",
+          "The exchange has been cancelled by " . auth()->user()->fullname,
+          [
+            'exchange_id' => $exchange->exchange_id,
+            'type' => 'exchange_cancelled'
+          ]
+        );
+      }
+
+      return response()->json([
+        'message' => 'success',
+        'exchange' => $exchange
+      ], 200);
+    } catch (\Throwable $th) {
+      DB::rollBack();
       return response()->json([
         'message' => 'error',
         'error' => $th->getMessage()
