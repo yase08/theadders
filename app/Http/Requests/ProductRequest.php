@@ -36,8 +36,8 @@ class ProductRequest extends FormRequest
             'item_codition' => 'nullable|integer|in:1,2,3',
             'view_count' => 'nullable|integer|min:0',
             'status' => 'nullable|in:0,1,2',
-            'product_images' => 'required|array',
-            'product_images.*' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            'product_images' => 'nullable|array',
+            'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ];
     }
 

@@ -6,6 +6,7 @@ use App\Interfaces\ProductCategoryInterface;
 use App\Models\Categories;
 use App\Models\Product;
 use App\Models\CategorySub;
+use App\Models\ProductImage;
 use App\Models\User;
 use App\Models\ProductView;
 
