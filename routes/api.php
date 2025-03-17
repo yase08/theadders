@@ -62,6 +62,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/exchange/{exchange_id}', [ExchangeController::class, 'getExchangeById']);
     Route::post('/exchange/{exchangeId}/complete', [ExchangeController::class, 'completeExchange']);
     Route::post('/exchange/{exchangeId}/cancel', [ExchangeController::class, 'cancelExchange']);
+    Route::get('/exchange/product/{productId}', [ExchangeController::class, 'getProductExchangeRequests']);
 });
 // exchange end
 

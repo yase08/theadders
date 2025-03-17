@@ -239,4 +239,33 @@ class ExchangeRepository implements ExchangeInterface
       throw new \Exception('Unable to cancel exchange: ' . $e->getMessage());
     }
   }
+
+  public function getProductExchangeRequests(int $productId)
+    {
+      try {
+        $userId = auth()->id();
+    
+        $exchanges = Exchange::where(function ($query) use ($userId, $productId) {
+            $query->where('user_id', $userId)
+                  ->where('product_id', $productId);
+          })
+          ->orWhere(function ($query) use ($userId, $productId) {
+            $query->where('to_user_id', $userId)
+                  ->where('to_product_id', $productId);
+          })
+          ->where('status', 'Submission')
+          ->with([
+            'requesterProduct',
+            'receiverProduct',
+            'requester',
+            'receiver'
+          ])
+          ->orderBy('created', 'desc')
+          ->get();
+    
+        return $exchanges;
+      } catch (\Exception $e) {
+        throw new \Exception('Unable to get product exchange requests: ' . $e->getMessage());
+      }
+    }
 }

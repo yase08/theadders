@@ -21,4 +21,6 @@ interface ExchangeInterface
   public function completeExchange(int $exchangeId);
 
   public function cancelExchange(int $exchangeId);
+
+  public function getProductExchangeRequests(int $productId);
 }

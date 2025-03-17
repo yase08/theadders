@@ -293,4 +293,21 @@ class ExchangeController extends Controller
       ], 500);
     }
   }
+
+  public function getProductExchangeRequests($productId)
+  {
+    try {
+      $exchanges = $this->exchangeInterface->getProductExchangeRequests($productId);
+      return response()->json([
+        'success' => true,
+        'data' => $exchanges,
+        'message' => 'success'
+      ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
 }
