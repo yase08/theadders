@@ -18,7 +18,7 @@ class RatingController extends Controller
     public function rateExchangeProduct(Request $request)
     {
         $request->validate([
-            'exchange_id' => 'required|exists:exchanges,exchange_id',
+            'exchange_id' => 'required|exists:trs_exchange,exchange_id',
             'rating' => 'required|integer|between:1,5'
         ]);
 

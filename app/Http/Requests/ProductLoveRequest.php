@@ -14,7 +14,7 @@ class ProductLoveRequest extends FormRequest
     public function rules()
     {
         return [
-            'product_id' => 'required|exists:products,product_id',
+            'product_id' => 'required|exists:tabel_product,product_id',
             'user_id' => 'sometimes|exists:users,users_id',
             'status' => 'sometimes|in:0,1,2'
         ];
