@@ -198,7 +198,7 @@ class ExchangeRepository implements ExchangeInterface
         throw new \Exception('Exchange must be approved first');
       }
 
-      $userId = auth()->id();
+      $userId = auth()->id(); 
       if ($userId !== $exchange->user_id && $userId !== $exchange->to_user_id) {
         throw new \Exception('Unauthorized action');
       }

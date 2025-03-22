@@ -38,4 +38,17 @@ class UserRepository implements UserRepositoryInterface
         $user->update($data);
         return $user->fresh();
     }
+
+    public function getUserById($userId)
+    {
+        try {
+            $user = User::with(['userPassword'])
+                ->where('users_id', $userId)
+                ->first();
+
+            return $user;
+        } catch (\Exception $e) {
+            throw new \Exception('Error getting user by ID: ' . $e->getMessage());
+        }
+    }
 }

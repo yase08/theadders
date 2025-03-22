@@ -31,6 +31,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
     Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+    Route::get('/user/{userId}', [AuthController::class, 'getUserById']);
 });
 // category start
 Route::post('/category', [CategoryController::class, 'storeCategory']);

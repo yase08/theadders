@@ -156,6 +156,30 @@ class AuthController extends Controller
         }
     }
 
+    public function getUserById($userId)
+    {
+        try {
+            $user = $this->userRepositoryInterface->getUserById($userId);
+            
+            if (!$user) {
+                return ApiResponseClass::sendResponse(null, "User not found", 404);
+            }
+
+            $userStats = $this->getUserStats($user->users_id);
+
+            $response = (new UserResource($user))->additional([
+                'stats' => [
+                    'followers_count' => $userStats['followers_count'],
+                    'wishlist_count' => $userStats['wishlist_count'],
+                    'products_count' => $userStats['products_count']
+                ]
+            ]);
+
+            return ApiResponseClass::sendResponse($response, "success", 200);
+        } catch (\Exception $e) {
+            return ApiResponseClass::sendResponse(null, "An error occurred: " . $e->getMessage(), 500);
+        }
+    }
     private function getUserStats($userId)
     {
         return [
