@@ -42,8 +42,7 @@ class UserRepository implements UserRepositoryInterface
     public function getUserById($userId)
     {
         try {
-            $user = User::with(['userPassword'])
-                ->where('users_id', $userId)
+            $user = User::where('users_id', $userId)
                 ->first();
 
             return $user;
