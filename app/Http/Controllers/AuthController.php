@@ -10,6 +10,7 @@ use App\Http\Resources\UserResource;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Interfaces\UserRepositoryInterface;
 use App\Models\ProductLove;
+use App\Models\Product;
 use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -184,8 +185,8 @@ class AuthController extends Controller
     {
         return [
             'followers_count' => UserFollow::where('users_id', $userId)->count(),
-            'wishlist_count' => ProductLove::where('user_id', $userId)->where('status', 1)->count(),
-            'products_count' => ProductLove::where('author', $userId)->count()
+            'wishlist_count' => ProductLove::where('user_id', $userId)->count(),
+            'products_count' => Product::where('author', $userId)->count()
         ];
     }
 
