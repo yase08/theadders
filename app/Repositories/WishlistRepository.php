@@ -37,10 +37,19 @@ class WishlistRepository implements WishlistInterface
     public function getUserWishlist()
     {
         try {
-            return ProductLove::where('user_id', auth()->id())
+            $wishlist = ProductLove::where('user_id', auth()->id())
                 ->where('status', 1)
-                ->with(['product.category', 'product.categorySub'])
+                ->with(['product.category', 'product.categorySub', 'product.ratings'])
                 ->get();
+
+            // Calculate ratings for each product in wishlist
+            $wishlist->each(function ($item) {
+                $ratings = $item->product->ratings()->where('status', 1)->get();
+                $item->product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+                $item->product->total_ratings = $ratings->count();
+            });
+
+            return $wishlist;
         } catch (\Exception $e) {
             throw new \Exception('Unable to get wishlist: ' . $e->getMessage());
         }

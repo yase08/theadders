@@ -118,14 +118,21 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function getUserProducts(array $filters)
     {
-        $query = Product::with(['category', 'categorySub'])
+        $query = Product::with(['category', 'categorySub', 'ratings'])
             ->where('author', auth()->id());
 
-        if (isset($filters['per_page'])) {
-            return $query->paginate($filters['per_page']);
-        }
+        $result = isset($filters['per_page']) 
+            ? $query->paginate($filters['per_page']) 
+            : $query->get();
 
-        return $query->get();
+        // Calculate ratings for each product
+        $result->each(function ($product) {
+            $ratings = $product->ratings()->where('status', 1)->get();
+            $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+            $product->total_ratings = $ratings->count();
+        });
+
+        return $result;
     }
 
     public function getCategories(array $filters)
