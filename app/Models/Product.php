@@ -19,7 +19,6 @@ class Product extends Model
         'description',
         'thumbail',
         'price',
-        'end_price',
         'year_release',
         'buy_release',
         'item_codition',
@@ -33,7 +32,6 @@ class Product extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
-        'end_price' => 'decimal:2',
         'view_count' => 'integer',
         'status' => 'integer',
     ];

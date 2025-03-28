@@ -757,8 +757,6 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         custom: []
-      end_price:
-        name: end_price
         description: 'Must be at least 0.'
         required: false
         example: 66
@@ -840,7 +838,6 @@ endpoints:
       product_name: mqeopfuudtdsufvyvddqa
       description: 'Dolores dolorum amet iste laborum eius est dolor.'
       price: 12
-      end_price: 66
       year_release: '8107'
       buy_release: '8107'
       item_codition: '3'
