@@ -59,6 +59,11 @@ class Product extends Model
             ->where('status', 1); // Only get active images
     }
 
+    public function ratings()
+    {
+        return $this->hasMany(ProductRating::class, 'product_id', 'product_id');
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['category_id'] ?? false, function ($query, $categoryId) {

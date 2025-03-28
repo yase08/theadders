@@ -43,10 +43,19 @@ class RatingRepository implements RatingInterface
     public function getProductRatings(int $productId)
     {
         try {
-            return ProductRating::where('product_id', $productId)
+            $ratings = ProductRating::where('product_id', $productId)
                 ->where('status', 1)
                 ->with('user')
                 ->get();
+
+            $averageRating = $ratings->avg('rating');
+            $totalRatings = $ratings->count();
+
+            return [
+                'ratings' => $ratings,
+                'average_rating' => round($averageRating, 1),
+                'total_ratings' => $totalRatings
+            ];
         } catch (\Exception $e) {
             throw new \Exception('Unable to get product ratings: ' . $e->getMessage());
         }

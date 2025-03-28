@@ -88,7 +88,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function getProducts(array $filters)
     {
-        $query = User::with(['products.category', 'products.categorySub'])
+        $query = User::with(['products.category', 'products.categorySub', 'products.ratings'])
             ->whereHas('products', function ($query) use ($filters) {
                 $query->filter([
                     'category_id' => $filters['category_id'] ?? null,
@@ -101,11 +101,18 @@ class ProductCategoryRepository implements ProductCategoryInterface
             })
             ->where('users_id', '!=', auth()->id());
 
-        if (isset($filters['per_page'])) {
-            return $query->paginate($filters['per_page']);
-        }
+        $result = isset($filters['per_page']) ? $query->paginate($filters['per_page']) : $query->get();
 
-        return $query->get();
+        // Calculate ratings for each product
+        $result->each(function ($user) {
+            $user->products->each(function ($product) {
+                $ratings = $product->ratings()->where('status', 1)->get();
+                $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+                $product->total_ratings = $ratings->count();
+            });
+        });
+
+        return $result;
     }
 
 
@@ -153,9 +160,14 @@ class ProductCategoryRepository implements ProductCategoryInterface
     public function getProductDetail($productId)
     {
         try {
-            $product = Product::with(['category', 'categorySub', 'user', 'productImages'])
+            $product = Product::with(['category', 'categorySub', 'user', 'productImages', 'ratings'])
                 ->where('product_id', $productId)
                 ->firstOrFail();
+
+            // Calculate ratings
+            $ratings = $product->ratings()->where('status', 1)->get();
+            $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+            $product->total_ratings = $ratings->count();
 
             // Increment view count
             $product->increment('view_count');
