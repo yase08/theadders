@@ -46,7 +46,7 @@ class ExchangeController extends Controller
 
       \Log::info('message: ', ['ini' => "Kamu mendapatkan permintaan exchange baru dari " . auth()->user()->fullname]);
 
-      if ($receiver && $receiver->fcm_token) {
+      if ($receiver && $receiver->fcm_token && $receiver->id != auth()->id()) {
         \Log::info('notif terkirim: '); // Log sukses
         $this->firebaseService->sendNotification(
           $receiver->fcm_token,

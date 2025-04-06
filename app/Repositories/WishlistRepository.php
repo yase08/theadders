@@ -10,6 +10,16 @@ class WishlistRepository implements WishlistInterface
     public function addToWishlist(array $data)
     {
         try {
+            // Check if product is already in wishlist
+            $exists = ProductLove::where('user_id', auth()->id())
+                ->where('product_id', $data['product_id'])
+                ->where('status', 1)
+                ->exists();
+
+            if ($exists) {
+                throw new \Exception('Product is already in wishlist');
+            }
+
             return ProductLove::create([
                 'product_id' => $data['product_id'],
                 'user_id_author' => auth()->id(),

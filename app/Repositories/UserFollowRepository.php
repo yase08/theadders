@@ -10,6 +10,15 @@ class UserFollowRepository implements UserFollowInterface
     public function followUser($userId)
     {
         try {
+            // Check if already following
+            $exists = UserFollow::where('users_id', $userId)
+                ->where('users_follower', auth()->id())
+                ->exists();
+
+            if ($exists) {
+                throw new \Exception('Already following this user');
+            }
+
             return UserFollow::create([
                 'users_id' => $userId,
                 'users_follower' => auth()->id(),

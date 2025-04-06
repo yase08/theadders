@@ -27,6 +27,16 @@ class RatingRepository implements RatingInterface
                 ? $exchange->to_product_id 
                 : $exchange->product_id;
 
+            // Check if user has already rated this product in this exchange
+            $existingRating = ProductRating::where('product_id', $productToRate)
+                ->where('user_id', $userId)
+                ->where('status', 1)
+                ->exists();
+
+            if ($existingRating) {
+                throw new \Exception('You have already rated this product');
+            }
+
             return ProductRating::create([
                 'product_id' => $productToRate,
                 'user_id' => $userId,
