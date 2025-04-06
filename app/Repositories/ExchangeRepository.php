@@ -152,14 +152,27 @@ class ExchangeRepository implements ExchangeInterface
       $exchanges = Exchange::where('to_user_id', $userId)
         ->where('status', 'Submission')
         ->with([
-          'requesterProduct',
-          'receiverProduct',
+          'requesterProduct.ratings',
+          'receiverProduct.ratings',
           'requester',
           'receiver'
         ])
         ->orderBy('created', 'desc')
         ->get();
-
+  
+      // Calculate ratings for each product
+      $exchanges->each(function ($exchange) {
+          // Calculate requester product ratings
+          $requesterRatings = $exchange->requesterProduct->ratings()->where('status', 1)->get();
+          $exchange->requesterProduct->average_rating = round($requesterRatings->avg('rating'), 1) ?? 0;
+          $exchange->requesterProduct->total_ratings = $requesterRatings->count();
+  
+          // Calculate receiver product ratings
+          $receiverRatings = $exchange->receiverProduct->ratings()->where('status', 1)->get();
+          $exchange->receiverProduct->average_rating = round($receiverRatings->avg('rating'), 1) ?? 0;
+          $exchange->receiverProduct->total_ratings = $receiverRatings->count();
+      });
+  
       return $exchanges;
     } catch (\Exception $e) {
       throw new \Exception('Unable to get incoming exchange requests: ' . $e->getMessage());
