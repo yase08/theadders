@@ -206,7 +206,14 @@ class AuthController extends Controller
     public function refreshToken()
     {
         try {
-            $oldToken = auth()->guard('api')->getToken();
+            if (!auth()->guard('api')->check()) {
+                return ApiResponseClass::sendResponse(
+                    null,
+                    "Unauthenticated",
+                    401
+                );
+            }
+
             $token = auth()->guard('api')->refresh();
 
             return response()->json([
