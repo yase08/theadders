@@ -26,11 +26,12 @@ Route::post('/signup', [AuthController::class, 'signUp']);
 Route::post('/login', [AuthController::class, 'login']);
 // auth end
 
-Route::middleware('auth:api')->group(function () {
+Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+
+Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
-    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     Route::get('/user/{userId}', [AuthController::class, 'getUserById']);
 });
 // category start
@@ -53,7 +54,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
 // product end
 
 // exchange start
-Route::middleware('auth:api')->group(function () {
+Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/exchange', [ExchangeController::class, 'requestExchange']);
     Route::put('/approve-exchange/{exchange_id}', [ExchangeController::class, 'approveExchange']);
     Route::put('/decline-exchange/{exchange_id}', [ExchangeController::class, 'declineExchange']);
@@ -68,7 +69,7 @@ Route::middleware('auth:api')->group(function () {
 // exchange end
 
 // chat start
-Route::middleware('auth:api')->group(function () {
+Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/messages/send', [MessageController::class, 'sendMessage']);
     Route::get('/messages/chats', [MessageController::class, 'getChatList']);
     Route::get('/messages/history', [MessageController::class, 'getChatHistory']);
@@ -77,7 +78,7 @@ Route::middleware('auth:api')->group(function () {
 });
 // chat end
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(JwtMiddleware::class)->group(function () {
     // User Follow routes
     Route::post('/users/{userId}/follow', [UserFollowController::class, 'follow']);
     Route::delete('/users/{userId}/unfollow', [UserFollowController::class, 'unfollow']);
@@ -86,7 +87,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/users/{userId}/follow-status', [UserFollowController::class, 'checkFollow']);
 });
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(JwtMiddleware::class)->group(function () {
     // Wishlist routes
     Route::post('/wishlist', [WishlistController::class, 'addToWishlist']);
     Route::delete('/wishlist/{productId}', [WishlistController::class, 'removeFromWishlist']);
@@ -94,7 +95,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/wishlist/check/{productId}', [WishlistController::class, 'checkWishlist']);
 });
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(JwtMiddleware::class)->group(function () {
     // Rating routes
     Route::post('/rate-exchange', [RatingController::class, 'rateExchangeProduct']);
     Route::get('/product/{productId}/ratings', [RatingController::class, 'getProductRatings']);
