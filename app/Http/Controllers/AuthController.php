@@ -221,6 +221,7 @@ class AuthController extends Controller
             $newToken = \JWTAuth::refresh();
             
             return response()->json([
+                'success' => true,
                 'token' => $newToken,
                 'message' => 'success'
             ], 200);
