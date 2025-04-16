@@ -12,6 +12,7 @@ class PwUser extends Authenticatable
   public const CREATED_AT = 'created';
   public const UPDATED_AT = 'updated';
   protected $table = 'pw_users';
+  protected $primaryKey = 'id';
 
   protected $fillable = [
     'username',

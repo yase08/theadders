@@ -12,9 +12,18 @@ class UserRepository implements UserRepositoryInterface
     {
         $user = User::create($dataUser);
         $user->refresh();
-        $dataPwUser['id'] = $user->user_id;
 
-        PwUser::create($dataPwUser);
+        $pwUser = new PwUser();
+        $pwUser->id = $user->users_id;
+        $pwUser->username = $dataPwUser['username'];
+        $pwUser->nama_lengkap = $dataPwUser['nama_lengkap'];
+        $pwUser->password = $dataPwUser['password'];
+        $pwUser->tipe = $dataPwUser['tipe'];
+        $pwUser->akses = $dataPwUser['akses'];
+        $pwUser->kodeacak = $dataPwUser['kodeacak'];
+        $pwUser->updater = $dataPwUser['updater'];
+        $pwUser->status = $dataPwUser['status'];
+        $pwUser->save();
 
         return $user;
     }
