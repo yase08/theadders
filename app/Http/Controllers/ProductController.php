@@ -7,7 +7,7 @@ use App\Http\Requests\ProductIndexRequest;
 use App\Interfaces\ProductCategoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+use App\Http\Requests\TradeRequest;
 
 class ProductController extends Controller
 {
@@ -107,10 +107,10 @@ class ProductController extends Controller
         }
     }
 
-    public function tradeHistory(Request $request)
+    public function tradeHistory(TradeRequest $request)
     {
         try {
-            $filters = $request->all();
+            $filters = $request->validated();
             $products = $this->productCategoryInterface->getUserTradeHistory($filters);
             
             return response()->json([
