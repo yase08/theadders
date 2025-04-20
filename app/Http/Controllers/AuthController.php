@@ -15,7 +15,6 @@ use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 // AuthController
 
@@ -204,35 +203,22 @@ class AuthController extends Controller
         return response()->json(['message' => 'FCM token updated successfully']);
     }
 
-    public function refreshToken(Request $request)
+    public function refreshToken()
     {
         try {
-            // Get token directly from request
-            $token = $request->bearerToken();
-            
-            if (!$token) {
-                return ApiResponseClass::sendResponse(null, "Token not provided", 401);
-            }
-            
-            // Important: Set the token in the JWT parser
-            \JWTAuth::setToken($token);
-            
-            // Then refresh it
-            $newToken = \JWTAuth::refresh();
-            
+            $oldToken = auth()->guard('api')->getToken();
+            $token = auth()->guard('api')->refresh();
+
             return response()->json([
-                'success' => true,
-                'token' => $newToken,
+                'token' => $token,
                 'message' => 'success'
             ], 200);
         } catch (\Exception $e) {
-            return ApiResponseClass::sendResponse(null, "Token refresh failed: " . $e->getMessage(), 401);
+            return ApiResponseClass::sendResponse(
+                null,
+                "Token refresh failed: " . $e->getMessage(),
+                401
+            );
         }
     }
 }
-
-
-
-
-
-

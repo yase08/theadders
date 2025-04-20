@@ -62,6 +62,14 @@ class Product extends Model
         return $this->hasMany(ProductRating::class, 'product_id', 'product_id');
     }
 
+    public function exchanges()
+    {
+        return $this->where(function($query) {
+            $query->where('product_id', $this->product_id)
+                  ->orWhere('to_product_id', $this->product_id);
+        });
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['category_id'] ?? false, function ($query, $categoryId) {

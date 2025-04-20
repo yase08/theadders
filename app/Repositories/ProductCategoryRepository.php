@@ -96,7 +96,9 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     'sort' => $filters['sort'] ?? null,
                     'size' => $filters['size'] ?? null,
                     'price_range' => $filters['price_range'] ?? null,
-                ]);
+                ])->whereDoesntHave('trs_exchange', function($q) {
+                    $q->where('status', 'Completed');
+                });
             })
             ->where('users_id', '!=', auth()->id());
 
@@ -114,11 +116,13 @@ class ProductCategoryRepository implements ProductCategoryInterface
         return $result;
     }
 
-
     public function getUserProducts(array $filters)
     {
         $query = Product::with(['category', 'categorySub', 'ratings'])
-            ->where('author', auth()->id());
+            ->where('author', auth()->id())
+            ->whereDoesntHave('trs_exchange', function($q) {
+                $q->where('status', 'Completed');
+            });
 
         $result = isset($filters['per_page']) 
             ? $query->paginate($filters['per_page']) 
@@ -134,6 +138,38 @@ class ProductCategoryRepository implements ProductCategoryInterface
         return $result;
     }
 
+    public function getUserTradeHistory(array $filters)
+    {
+        try {
+            $userId = auth()->id();
+            
+            $query = Product::with(['category', 'categorySub', 'ratings', 'trs_exchange'])
+                ->where(function($q) use ($userId) {
+                    $q->whereHas('trs_exchange', function($query) use ($userId) {
+                        $query->where('status', 'Completed')
+                            ->where(function($q) use ($userId) {
+                                $q->where('user_id', $userId)
+                                  ->orWhere('to_user_id', $userId);
+                            });
+                    });
+                });
+
+            $result = isset($filters['per_page']) 
+                ? $query->paginate($filters['per_page']) 
+                : $query->get();
+
+            // Calculate ratings for each product
+            $result->each(function ($product) {
+                $ratings = $product->ratings()->where('status', 1)->get();
+                $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+                $product->total_ratings = $ratings->count();
+            });
+
+            return $result;
+        } catch (\Exception $e) {
+            throw new \Exception('Unable to get trade history: ' . $e->getMessage());
+        }
+    }
     public function getCategories(array $filters)
     {
         $query = Categories::query();

@@ -105,4 +105,23 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function tradeHistory(Request $request)
+    {
+        try {
+            $filters = $request->all();
+            $products = $this->productCategoryInterface->getUserTradeHistory($filters);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $products,
+                'message' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
