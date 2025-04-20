@@ -96,7 +96,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     'sort' => $filters['sort'] ?? null,
                     'size' => $filters['size'] ?? null,
                     'price_range' => $filters['price_range'] ?? null,
-                ])->whereDoesntHave('trs_exchange', function($q) {
+                ])->whereDoesntHave('exchanges', function($q) {
                     $q->where('status', 'Completed');
                 });
             })
@@ -120,7 +120,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
     {
         $query = Product::with(['category', 'categorySub', 'ratings'])
             ->where('author', auth()->id())
-            ->whereDoesntHave('trs_exchange', function($q) {
+            ->whereDoesntHave('exchanges', function($q) {
                 $q->where('status', 'Completed');
             });
 
@@ -143,9 +143,9 @@ class ProductCategoryRepository implements ProductCategoryInterface
         try {
             $userId = auth()->id();
             
-            $query = Product::with(['category', 'categorySub', 'ratings', 'trs_exchange'])
+            $query = Product::with(['category', 'categorySub', 'ratings', 'exchanges'])
                 ->where(function($q) use ($userId) {
-                    $q->whereHas('trs_exchange', function($query) use ($userId) {
+                    $q->whereHas('exchanges', function($query) use ($userId) {
                         $query->where('status', 'Completed')
                             ->where(function($q) use ($userId) {
                                 $q->where('user_id', $userId)

@@ -64,10 +64,8 @@ class Product extends Model
 
     public function exchanges()
     {
-        return $this->where(function($query) {
-            $query->where('product_id', $this->product_id)
-                  ->orWhere('to_product_id', $this->product_id);
-        });
+        return $this->hasMany(Exchange::class, 'product_id', 'product_id')
+                    ->orWhere('to_product_id', 'product_id');
     }
 
     public function scopeFilter($query, array $filters)
