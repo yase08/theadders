@@ -7,6 +7,7 @@ use App\Http\Requests\ProductIndexRequest;
 use App\Interfaces\ProductCategoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
