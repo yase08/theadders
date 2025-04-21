@@ -1,74 +1,66 @@
-1. To make money as a trader you have to know what the market is going to do next.
-Agree 
-2. Sometimes I find myself thinking that there must be a way to trade without having to take a loss.
-Agree 
-3. Making money as a trader is primarily a function of analysis.
-Agree 
-4. Losses are an unavoidable component of trading.
- Disagree
-5. My risk is always defined before I enter a trade.
-Agree 
-6. In my mind there is always a cost associated with finding out what the market may do next.
-Agree Disgree
-7. I wouldn't even bother putting on the next trade if I wasn't sure that it was going to be a winner.
-Agree 
-8. The more a trader learns about the markets and how they behave, the easier it will be for him to
-execute his trades.
-Agree 
-9. My methodology tells me exactly under what market conditions to either enter or exit a trade.
-Agree 
-10. Even when I have a clear signal to reverse my position, I find it extremely difficult to do.
-Agree 
-11. I have sustained periods of consistent success usually followed by some fairly drastic draw-downs
-in my equity.
-Agree 
-12. When I first started trading I would describe my trading methodology as haphazard, meaning some
-success in between a lot of pain.
-Agree 
-13. I often find myself feeling that the markets are against me personally.
-Agree 
-14. As much as I might try to "let go," I find it very difficult to put past emotional wounds behind me.
-Agree 
-15. I have a money management philosophy that is founded in the principle of always taking some
-money out of the market when the market makes it available.
-Agree 
-16. A trader's job is to identify patterns in the markets' behavior that represent an opportunity and then
-to determine the risk of finding out if these patterns will play themselves out as they have in the past.
-Agree 
-17. Sometimes I just can't help feeling that I am a victim of the market.
-Agree 
-18. When I trade I usually try to stay focused in one time frame.
-Agree 
-19. Trading successfully requires a degree of mental flexibility far beyond the scope of most people.
-Agree 
-20. There are times when I can definitely feel the flow of the market; however, I often have difficulty
-acting on these feelings.
-Agree 
-21. There are many times when I am in a profitable trade and I know the move is basically over, but I
-still won't take my profits.
-Agree 
-22. No matter how much money I make in a trade, I am rarely ever satisfied and feel that I could have
-made more.
-Agree 
-23. When I put on a trade, I feel I have a positive attitude. I anticipate all of the money I could make
-from the trade in a positive way.
-Agree 
-24. The most important component in a trader's ability to accumulate money over time is having a
-belief in his own consistency.
-Agree 
-25. If you were granted a wish to be able to instantaneously acquire one trading skill, what skill would
-you choose?
-technical analysis
-26. I often spend sleepless nights worrying about the market.
-Agree 
-27. Do you ever feel compelled to make a trade because you are afraid that you might miss out?
-Yes 
-28. Although it doesn't happen veiy often, I really like my trades to be perfect. When I make a perfect
-call it feels so good that it makes up for all of the times that I don't.
-Agree 
-29. Do you ever find yourself planning trades you never execute, and executing trades you never
-planned?
-Yes 
-30. In a few sentences explain why most traders either don't make money or aren't able to keep what
-they make. 
-they are fool and greedy
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
+
+## About Laravel
+
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
+
+## Learning Laravel
+
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+
+## Laravel Sponsors
+
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+
+### Premium Partners
+
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
