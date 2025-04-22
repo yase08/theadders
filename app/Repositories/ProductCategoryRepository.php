@@ -25,7 +25,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'year_release' => $productData['year_release'] ?? null,
                 'buy_release' => $productData['buy_release'] ?? null,
                 'item_codition' => $productData['item_codition'] ?? null,
-                'view_count' => $productData['view_count'] ?? 0,
                 'author' => auth()->id(),
                 'status' => $productData['status'],
             ]);
@@ -240,6 +239,25 @@ class ProductCategoryRepository implements ProductCategoryInterface
             ]);
         } catch (\Exception $e) {
             \Log::error('Failed to track product view: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteProduct($productId)
+    {
+        try {
+            $product = Product::where('product_id', $productId)
+                ->where('author', auth()->id())
+                ->firstOrFail();
+
+            // Delete associated product images
+            ProductImage::where('product_id', $productId)->delete();
+            
+            // Delete the product
+            $product->delete();
+
+            return true;
+        } catch (\Exception $e) {
+            throw new \Exception('Unable to delete product: ' . $e->getMessage());
         }
     }
 }

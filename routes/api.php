@@ -51,6 +51,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/my-products', [ProductController::class, 'myProducts']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/my-trade-history', [ProductController::class, 'tradeHistory']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 });
 // product end
 

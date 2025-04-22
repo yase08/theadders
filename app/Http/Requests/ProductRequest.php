@@ -33,7 +33,6 @@ class ProductRequest extends FormRequest
             'year_release' => 'nullable|digits:4',
             'buy_release' => 'nullable|digits:4',
             'item_codition' => 'nullable|integer|in:1,2,3',
-            'view_count' => 'nullable|integer|min:0',
             'status' => 'nullable|in:0,1,2',
             'product_images' => 'nullable|array',
             'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
@@ -56,7 +55,6 @@ class ProductRequest extends FormRequest
             'price.numeric' => 'Price must be a number.',
             'item_codition.in' => 'Item condition is invalid.',
             'status.in' => 'Status is invalid.',
-            'view_count.integer' => 'View count must be a number.',
         ];        
     }
 }
