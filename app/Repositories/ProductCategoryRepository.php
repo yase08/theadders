@@ -188,9 +188,14 @@ class ProductCategoryRepository implements ProductCategoryInterface
     {
         $query = CategorySub::query();
 
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
         if (!empty($filters['search'])) {
             $query->where('category_name', 'like', '%' . $filters['search'] . '%');
         }
+
         if (isset($filters['per_page'])) {
             return $query->paginate($filters['per_page']);
         }

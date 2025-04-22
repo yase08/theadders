@@ -42,6 +42,7 @@ class CategorySubController extends Controller
         try {
             $subCategory = $this->productCategoryRepository->getSubCategories([
                 'search' => $request->input('search'),
+                'category_id' => $request->input('category_id'),
                 'per_page' => $request->input('per_page'),
             ]);
 
