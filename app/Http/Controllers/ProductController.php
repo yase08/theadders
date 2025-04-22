@@ -142,4 +142,42 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function update(ProductRequest $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validatedData = $request->validated();
+
+            // Handle thumbnail upload
+            if ($request->hasFile('thumbail')) {
+                $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
+            }
+
+            // Handle multiple product images
+            if ($request->hasFile('product_images')) {
+                $productImages = [];
+                foreach ($request->file('product_images') as $image) {
+                    $filename = $image->store('product_images', 'public');
+                    $productImages[] = $filename;
+                }
+                $validatedData['product_images'] = $productImages;
+            }
+
+            $product = $this->productCategoryInterface->updateProduct($id, $validatedData);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'success',
+                'product' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

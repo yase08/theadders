@@ -260,4 +260,47 @@ class ProductCategoryRepository implements ProductCategoryInterface
             throw new \Exception('Unable to delete product: ' . $e->getMessage());
         }
     }
+    
+    public function updateProduct($productId, $productData)
+        {
+            try {
+                $product = Product::where('product_id', $productId)
+                    ->where('author', auth()->id())
+                    ->firstOrFail();
+    
+                $product->update([
+                    'category_id' => $productData['category_id'],
+                    'category_sub_id' => $productData['category_sub_id'],
+                    'product_name' => $productData['product_name'],
+                    'description' => $productData['description'] ?? $product->description,
+                    'thumbail' => $productData['thumbail'] ?? $product->thumbail,
+                    'price' => $productData['price'],
+                    'year_release' => $productData['year_release'] ?? $product->year_release,
+                    'buy_release' => $productData['buy_release'] ?? $product->buy_release,
+                    'item_codition' => $productData['item_codition'] ?? $product->item_codition,
+                    'status' => $productData['status']
+                ]);
+    
+                // Update product images if provided
+                if (isset($productData['product_images']) && is_array($productData['product_images'])) {
+                    // Delete existing images
+                    ProductImage::where('product_id', $productId)->delete();
+                    
+                    // Add new images
+                    foreach ($productData['product_images'] as $image) {
+                        ProductImage::create([
+                            'product_id' => $product->product_id,
+                            'file_image' => $image,
+                            'created' => now(),
+                            'author' => auth()->id(),
+                            'status' => 1
+                        ]);
+                    }
+                }
+    
+                return $product->load('productImages');
+            } catch (\Exception $e) {
+                throw new \Exception('Unable to update product: ' . $e->getMessage());
+            }
+        }
 }

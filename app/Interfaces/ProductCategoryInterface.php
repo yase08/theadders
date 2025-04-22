@@ -14,4 +14,5 @@ interface ProductCategoryInterface
     public function getProductDetail($productId);
     public function getUserTradeHistory(array $filters);
     public function deleteProduct($productId);
+    public function updateProduct($productId, array $data);
 }
