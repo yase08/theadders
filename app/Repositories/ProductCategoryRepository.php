@@ -281,16 +281,16 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     ->firstOrFail();
     
                 $product->update([
-                    'category_id' => $productData['category_id'],
-                    'category_sub_id' => $productData['category_sub_id'],
-                    'product_name' => $productData['product_name'],
+                    'category_id' => $productData['category_id'] ?? $product->category_id,
+                    'category_sub_id' => $productData['category_sub_id'] ?? $product->category_sub_id,
+                    'product_name' => $productData['product_name'] ?? $product->product_name,
                     'description' => $productData['description'] ?? $product->description,
                     'thumbail' => $productData['thumbail'] ?? $product->thumbail,
-                    'price' => $productData['price'],
+                    'price' => $productData['price'] ?? $product->price,
                     'year_release' => $productData['year_release'] ?? $product->year_release,
                     'buy_release' => $productData['buy_release'] ?? $product->buy_release,
                     'item_codition' => $productData['item_codition'] ?? $product->item_codition,
-                    'status' => $productData['status']
+                    'status' => $productData['status'] ?? $product->status
                 ]);
     
                 // Update product images if provided

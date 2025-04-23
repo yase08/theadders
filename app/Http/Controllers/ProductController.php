@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Http\Requests\ProductIndexRequest;
 use App\Interfaces\ProductCategoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -143,7 +144,7 @@ class ProductController extends Controller
         }
     }
 
-    public function update(ProductRequest $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         try {
             \Log::info('Product Update Request Data:', [
