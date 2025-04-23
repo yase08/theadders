@@ -25,6 +25,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'year_release' => $productData['year_release'] ?? null,
                 'buy_release' => $productData['buy_release'] ?? null,
                 'item_codition' => $productData['item_codition'] ?? null,
+                'view_count' => 0,
                 'author' => auth()->id(),
                 'status' => $productData['status'],
             ]);
@@ -103,12 +104,18 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
         $result = isset($filters['per_page']) ? $query->paginate($filters['per_page']) : $query->get();
 
-        // Calculate ratings for each product
+        // Calculate ratings and check wishlist status for each product
         $result->each(function ($user) {
             $user->products->each(function ($product) {
                 $ratings = $product->ratings()->where('status', 1)->get();
                 $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
                 $product->total_ratings = $ratings->count();
+                
+                // Check if product is in user's wishlist
+                $product->is_wishlist = $product->productLoves()
+                    ->where('user_id_author', auth()->id())
+                    ->where('status', 1)
+                    ->exists();
             });
         });
 

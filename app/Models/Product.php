@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ProductLove;
 
 class Product extends Model
 {
@@ -62,6 +63,10 @@ class Product extends Model
         return $this->hasMany(ProductRating::class, 'product_id', 'product_id');
     }
 
+    public function productLoves()
+    {
+        return $this->hasMany(ProductLove::class, 'product_id', 'product_id');
+    }
     public function exchanges()
     {
         return $this->hasMany(Exchange::class, 'product_id', 'product_id')

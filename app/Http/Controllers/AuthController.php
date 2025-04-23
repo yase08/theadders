@@ -185,7 +185,7 @@ class AuthController extends Controller
     {
         return [
             'followers_count' => UserFollow::where('users_id', $userId)->count(),
-            'wishlist_count' => ProductLove::where('user_id', $userId)->count(),
+            'wishlist_count' => ProductLove::where('user_id_author', $userId)->count(),
             'products_count' => Product::where('author', $userId)->count()
         ];
     }

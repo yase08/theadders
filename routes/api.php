@@ -52,7 +52,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/my-trade-history', [ProductController::class, 'tradeHistory']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::post('/products/{id}', [ProductController::class, 'update']);
 });
 // product end
 

@@ -146,6 +146,12 @@ class ProductController extends Controller
     public function update(ProductRequest $request, $id)
     {
         try {
+            \Log::info('Product Update Request Data:', [
+                'all' => $request->all(),
+                'files' => $request->allFiles(),
+                'validated' => $request->validated()
+            ]);
+
             DB::beginTransaction();
 
             $validatedData = $request->validated();
@@ -174,6 +180,7 @@ class ProductController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Product Update Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

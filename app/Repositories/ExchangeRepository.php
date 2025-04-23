@@ -162,15 +162,19 @@ class ExchangeRepository implements ExchangeInterface
   
       // Calculate ratings for each product
       $exchanges->each(function ($exchange) {
-          // Calculate requester product ratings
-          $requesterRatings = $exchange->requesterProduct->ratings()->where('status', 1)->get();
-          $exchange->requesterProduct->average_rating = round($requesterRatings->avg('rating'), 1) ?? 0;
-          $exchange->requesterProduct->total_ratings = $requesterRatings->count();
+          // Calculate requester product ratings if exists
+          if ($exchange->requesterProduct) {
+              $requesterRatings = $exchange->requesterProduct->ratings()->where('status', 1)->get();
+              $exchange->requesterProduct->average_rating = round($requesterRatings->avg('rating'), 1) ?? 0;
+              $exchange->requesterProduct->total_ratings = $requesterRatings->count();
+          }
   
-          // Calculate receiver product ratings
-          $receiverRatings = $exchange->receiverProduct->ratings()->where('status', 1)->get();
-          $exchange->receiverProduct->average_rating = round($receiverRatings->avg('rating'), 1) ?? 0;
-          $exchange->receiverProduct->total_ratings = $receiverRatings->count();
+          // Calculate receiver product ratings if exists
+          if ($exchange->receiverProduct) {
+              $receiverRatings = $exchange->receiverProduct->ratings()->where('status', 1)->get();
+              $exchange->receiverProduct->average_rating = round($receiverRatings->avg('rating'), 1) ?? 0;
+              $exchange->receiverProduct->total_ratings = $receiverRatings->count();
+          }
       });
   
       return $exchanges;

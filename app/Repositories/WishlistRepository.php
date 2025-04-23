@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Interfaces\WishlistInterface;
 use App\Models\ProductLove;
+use App\Models\Product;
 
 class WishlistRepository implements WishlistInterface
 {
@@ -11,7 +12,7 @@ class WishlistRepository implements WishlistInterface
     {
         try {
             // Check if product is already in wishlist
-            $exists = ProductLove::where('user_id', auth()->id())
+            $exists = ProductLove::where('user_id_author', auth()->id())
                 ->where('product_id', $data['product_id'])
                 ->where('status', 1)
                 ->exists();
@@ -20,10 +21,13 @@ class WishlistRepository implements WishlistInterface
                 throw new \Exception('Product is already in wishlist');
             }
 
+            // Get product author
+            $product = Product::findOrFail($data['product_id']);
+
             return ProductLove::create([
                 'product_id' => $data['product_id'],
                 'user_id_author' => auth()->id(),
-                'user_id' => $data['user_id'] ?? auth()->id(),
+                'user_id' => $product->author,
                 'created' => now(),
                 'author' => 'system',
                 'status' => 1
@@ -36,7 +40,7 @@ class WishlistRepository implements WishlistInterface
     public function removeFromWishlist(int $productId)
     {
         try {
-            return ProductLove::where('user_id', auth()->id())
+            return ProductLove::where('user_id_author', auth()->id())
                 ->where('product_id', $productId)
                 ->delete();
         } catch (\Exception $e) {
@@ -47,7 +51,7 @@ class WishlistRepository implements WishlistInterface
     public function getUserWishlist()
     {
         try {
-            $wishlist = ProductLove::where('user_id', auth()->id())
+            $wishlist = ProductLove::where('user_id_author', auth()->id())
                 ->where('status', 1)
                 ->with(['product.category', 'product.categorySub', 'product.ratings'])
                 ->get();
@@ -68,7 +72,7 @@ class WishlistRepository implements WishlistInterface
     public function checkWishlist(int $productId)
     {
         try {
-            return ProductLove::where('user_id', auth()->id())
+            return ProductLove::where('user_id_author', auth()->id())
                 ->where('product_id', $productId)
                 ->where('status', 1)
                 ->exists();
