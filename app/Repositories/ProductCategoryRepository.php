@@ -280,20 +280,26 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     ->where('author', auth()->id())
                     ->firstOrFail();
     
-                $product->update([
+                $updateData = [
                     'category_id' => $productData['category_id'] ?? $product->category_id,
                     'category_sub_id' => $productData['category_sub_id'] ?? $product->category_sub_id,
                     'product_name' => $productData['product_name'] ?? $product->product_name,
                     'description' => $productData['description'] ?? $product->description,
-                    'thumbail' => $productData['thumbail'] ?? $product->thumbail,
                     'price' => $productData['price'] ?? $product->price,
                     'year_release' => $productData['year_release'] ?? $product->year_release,
                     'buy_release' => $productData['buy_release'] ?? $product->buy_release,
                     'item_codition' => $productData['item_codition'] ?? $product->item_codition,
                     'status' => $productData['status'] ?? $product->status
-                ]);
+                ];
     
-                // Update product images if provided
+                // Only update thumbail if provided
+                if (isset($productData['thumbail'])) {
+                    $updateData['thumbail'] = $productData['thumbail'];
+                }
+    
+                $product->update($updateData);
+    
+                // Only update product images if provided
                 if (isset($productData['product_images']) && is_array($productData['product_images'])) {
                     // Delete existing images
                     ProductImage::where('product_id', $productId)->delete();

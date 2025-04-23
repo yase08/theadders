@@ -152,17 +152,19 @@ class ProductController extends Controller
                 'files' => $request->allFiles(),
                 'validated' => $request->validated()
             ]);
-
+            
             DB::beginTransaction();
 
             $validatedData = $request->validated();
 
-            // Handle thumbnail upload
+            // Only include thumbail if file is present
             if ($request->hasFile('thumbail')) {
                 $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
+            } elseif (!isset($validatedData['thumbail'])) {
+                unset($validatedData['thumbail']);
             }
 
-            // Handle multiple product images
+            // Only include product_images if files are present
             if ($request->hasFile('product_images')) {
                 $productImages = [];
                 foreach ($request->file('product_images') as $image) {
@@ -170,6 +172,8 @@ class ProductController extends Controller
                     $productImages[] = $filename;
                 }
                 $validatedData['product_images'] = $productImages;
+            } elseif (!isset($validatedData['product_images'])) {
+                unset($validatedData['product_images']);
             }
 
             $product = $this->productCategoryInterface->updateProduct($id, $validatedData);
