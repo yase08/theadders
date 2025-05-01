@@ -20,8 +20,6 @@ class Product extends Model
         'description',
         'thumbail',
         'price',
-        'year_release',
-        'buy_release',
         'item_codition',
         'view_count',
         'created',

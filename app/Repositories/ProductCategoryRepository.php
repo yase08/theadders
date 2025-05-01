@@ -22,8 +22,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'description' => $productData['description'] ?? null,
                 'thumbail' => $productData['thumbail'] ?? null,
                 'price' => $productData['price'],
-                'year_release' => $productData['year_release'] ?? null,
-                'buy_release' => $productData['buy_release'] ?? null,
                 'item_codition' => $productData['item_codition'] ?? null,
                 'view_count' => 0,
                 'author' => auth()->id(),
@@ -286,8 +284,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     'product_name' => $productData['product_name'] ?? $product->product_name,
                     'description' => $productData['description'] ?? $product->description,
                     'price' => $productData['price'] ?? $product->price,
-                    'year_release' => $productData['year_release'] ?? $product->year_release,
-                    'buy_release' => $productData['buy_release'] ?? $product->buy_release,
                     'item_codition' => $productData['item_codition'] ?? $product->item_codition,
                     'status' => $productData['status'] ?? $product->status
                 ];

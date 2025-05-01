@@ -2070,8 +2070,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
     --form "price=12"\
     --form "end_price=66"\
-    --form "year_release=8107"\
-    --form "buy_release=8107"\
     --form "item_codition=3"\
     --form "view_count=45"\
     --form "status=1"\

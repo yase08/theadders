@@ -28,14 +28,12 @@ class UpdateProductRequest extends FormRequest
             'category_sub_id' => 'nullable|integer|exists:mst_category_sub,category_sub_id',
             'product_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'thumbail' => 'nullable',
             'price' => 'nullable|numeric|min:0',
-            'year_release' => 'nullable|digits:4',
-            'buy_release' => 'nullable|digits:4',
             'item_codition' => 'nullable|integer|in:1,2,3',
             'status' => 'nullable|in:0,1,2',
-            'product_images' => 'nullable|array',
-            'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'product_images' => 'nullable',
+            'product_images.*' => 'nullable'
         ];
     }
 

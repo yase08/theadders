@@ -30,8 +30,6 @@ class ProductRequest extends FormRequest
             'description' => 'nullable|string',
             'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'price' => 'nullable|numeric|min:0',
-            'year_release' => 'nullable|digits:4',
-            'buy_release' => 'nullable|digits:4',
             'item_codition' => 'nullable|integer|in:1,2,3',
             'status' => 'nullable|in:0,1,2',
             'product_images' => 'nullable|array',
