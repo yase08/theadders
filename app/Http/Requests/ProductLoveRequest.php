@@ -15,7 +15,6 @@ class ProductLoveRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:tabel_product,product_id',
-            'status' => 'sometimes|in:0,1,2'
         ];
     }
 
@@ -24,7 +23,6 @@ class ProductLoveRequest extends FormRequest
         return [
             'product_id.required' => 'Product ID is required',
             'product_id.exists' => 'Product does not exist',
-            'status.in' => 'Invalid status value'
         ];
     }
 }

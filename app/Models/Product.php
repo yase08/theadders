@@ -26,13 +26,11 @@ class Product extends Model
         'author',
         'updated',
         'updater',
-        'status',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'view_count' => 'integer',
-        'status' => 'integer',
     ];
 
     public function category()
@@ -52,8 +50,7 @@ class Product extends Model
 
     public function productImages()
     {
-        return $this->hasMany(ProductImage::class, 'product_id', 'product_id')
-            ->where('status', 1); // Only get active images
+        return $this->hasMany(ProductImage::class, 'product_id', 'product_id');
     }
 
     public function ratings()

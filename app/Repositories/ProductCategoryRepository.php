@@ -25,7 +25,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'item_codition' => $productData['item_codition'] ?? null,
                 'view_count' => 0,
                 'author' => auth()->id(),
-                'status' => $productData['status'],
             ]);
 
             // Store product images if provided
@@ -285,7 +284,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     'description' => $productData['description'] ?? $product->description,
                     'price' => $productData['price'] ?? $product->price,
                     'item_codition' => $productData['item_codition'] ?? $product->item_codition,
-                    'status' => $productData['status'] ?? $product->status
                 ];
     
                 // Only update thumbail if provided

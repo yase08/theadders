@@ -31,7 +31,6 @@ class ProductRequest extends FormRequest
             'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'price' => 'nullable|numeric|min:0',
             'item_codition' => 'nullable|integer|in:1,2,3',
-            'status' => 'nullable|in:0,1,2',
             'product_images' => 'nullable|array',
             'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ];
@@ -52,7 +51,6 @@ class ProductRequest extends FormRequest
             'category_sub_id.exists' => 'The selected subcategory is invalid.',
             'price.numeric' => 'Price must be a number.',
             'item_codition.in' => 'Item condition is invalid.',
-            'status.in' => 'Status is invalid.',
-        ];        
+        ];
     }
 }
