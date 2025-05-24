@@ -73,7 +73,7 @@ class FirebaseService
                 ]
               ]
             ]));
-
+// 
           $this->messaging->send($message);
           Log::info('Notification sent for message: ' . ($messageRef->getKey() ?? 'unknown'));
         } else {
