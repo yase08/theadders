@@ -35,7 +35,6 @@ class FirebaseService
   public function sendMessage($data, $shouldSendNotification = true)
   {
     try {
-      // Store message to Firebase Realtime Database
       $messageRef = $this->storeMessage($data);
 
       if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
@@ -59,13 +58,20 @@ class FirebaseService
               'message_id' => $messageRef->getKey() ?? '',
               'type' => 'chat_message',
               'room_id' => $data['room_id'] ?? '',
-              'priority' => $data['priority'] ?? 'normal'
+              'priority' => $data['priority'] ?? 'normal',
+              'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
             ])
             ->withAndroidConfig(AndroidConfig::fromArray([
               'priority' => 'high',
             ]))
             ->withApnsConfig(ApnsConfig::fromArray([
               'headers' => ['apns-priority' => '10'],
+              'payload' => [
+                'aps' => [
+                  'content-available' => 1,
+                  'mutable-content' => 1
+                ]
+              ]
             ]));
 
           $this->messaging->send($message);
