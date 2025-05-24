@@ -56,8 +56,10 @@ class MessageController extends Controller
                 'receiver' => $receiver,
                 'message' => $request->message,
                 'exchange_id' => $request->exchange_id,
-                'client_status' => $isReceiverActive ? 'chat_open' : 'chat_closed'
-            ], !$isReceiverActive); // Only send notification if receiver is not active in chat
+                'client_status' => $isReceiverActive ? 'chat_open' : 'chat_closed',
+                'room_id' => $request->exchange_id,
+                'priority' => 'high'
+            ], !$isReceiverActive);
 
             return ApiResponseClass::sendResponse($message, 'success', 201);
         } catch (\Exception $e) {

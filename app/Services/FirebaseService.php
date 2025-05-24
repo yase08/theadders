@@ -35,26 +35,18 @@ class FirebaseService
   public function sendMessage($data, $shouldSendNotification = true)
   {
     try {
-      // Simpan pesan ke Firebase Realtime Database
+      // Store message to Firebase Realtime Database
       $messageRef = $this->storeMessage($data);
 
-      // Kirim notifikasi hanya jika:
-      // 1. shouldSendNotification = true
-      // 2. Penerima memiliki token FCM
-      // 3. Pesan tidak dalam status read atau delivered
       if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
-        // Periksa status aplikasi client (Flutter)
         $shouldSkipNotification = false;
 
-        // Jika ada data status (karena kita mungkin perlu mengetahui status dari Flutter)
         if (isset($data['client_status'])) {
-          // Jika pesan sudah dibaca, dikirimkan, atau client sedang terbuka
           if (in_array($data['client_status'], ['read', 'delivered', 'app_open'])) {
             $shouldSkipNotification = true;
           }
         }
 
-        // Hanya kirim notifikasi jika tidak perlu dilewati
         if (!$shouldSkipNotification) {
           $message = CloudMessage::withTarget('token', $data['receiver']->fcm_token)
             ->withNotification(Notification::create(
@@ -64,9 +56,17 @@ class FirebaseService
             ->withData([
               'exchange_id' => $data['exchange_id'] ?? '',
               'sender_id' => (string)$data['sender']->users_id,
-              'message_id' => $messageRef->getKey() ?? '', // Tambahkan message_id agar client bisa menandai pesan mana yang sudah dilihat
-              'type' => 'chat_message'
-            ]);
+              'message_id' => $messageRef->getKey() ?? '',
+              'type' => 'chat_message',
+              'room_id' => $data['room_id'] ?? '',
+              'priority' => $data['priority'] ?? 'normal'
+            ])
+            ->withAndroidConfig(AndroidConfig::fromArray([
+              'priority' => 'high',
+            ]))
+            ->withApnsConfig(ApnsConfig::fromArray([
+              'headers' => ['apns-priority' => '10'],
+            ]));
 
           $this->messaging->send($message);
           Log::info('Notification sent for message: ' . ($messageRef->getKey() ?? 'unknown'));
