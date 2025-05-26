@@ -43,17 +43,8 @@ class AuthController extends Controller
             ];
 
             $payloadPwUser = [
-                'username' => $req->fullname,
-                'nama_lengkap' => $req->fullname,
                 'password' => bcrypt($req->password),
-                'tipe' => 'system',
-                'akses' => 'system',
-                'kodeacak' => 'system',
-                'updater' => 'system',
-                'status' => '1',
             ];
-
-            \Log::info('Saving password hash: ' . $payloadPwUser['password']);
 
             $user = $this->userRepositoryInterface->signUp($payloadUser, $payloadPwUser);
 

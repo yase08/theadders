@@ -29,7 +29,13 @@ class User extends Authenticatable implements JWTSubject
         'avatar',
         'location',
         'bio',
-        'fcm_token'
+        'fcm_token',
+        'password'  // Add password field
+    ];
+
+    protected $hidden = [
+        'remember_token',
+        'password',  // Hide password from JSON/array output
     ];
 
     public function products(): HasMany
@@ -46,11 +52,6 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Message::class, 'receiver_id');
     }
-
-
-    protected $hidden = [
-        'remember_token',
-    ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',

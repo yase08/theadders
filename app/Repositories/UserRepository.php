@@ -10,27 +10,20 @@ class UserRepository implements UserRepositoryInterface
 {
     public function signUp(array $dataUser, array $dataPwUser)
     {
-        $user = User::create($dataUser);
-        $user->refresh();
-
-        $pwUser = new PwUser();
-        $pwUser->id = $user->users_id;
-        $pwUser->username = $dataPwUser['username'];
-        $pwUser->nama_lengkap = $dataPwUser['nama_lengkap'];
-        $pwUser->password = $dataPwUser['password'];
-        $pwUser->tipe = $dataPwUser['tipe'];
-        $pwUser->akses = $dataPwUser['akses'];
-        $pwUser->kodeacak = $dataPwUser['kodeacak'];
-        $pwUser->updater = $dataPwUser['updater'];
-        $pwUser->status = $dataPwUser['status'];
-        $pwUser->save();
-
-        return $user;
+        $user = User::create([
+            'fullname' => $dataUser['fullname'],
+            'email' => $dataUser['email'],
+            'phone' => $dataUser['phone'],
+            'status' => $dataUser['status'],
+            'password' => $dataPwUser['password']  // Store password directly in users table
+        ]);
+        
+        return $user->fresh();
     }
 
     public function getUserByEmail(string $email)
     {
-        return User::where('email', $email)->join('pw_users', 'users.users_id', '=', 'pw_users.id')->select('users.*', 'pw_users.password')->first();
+        return User::where('email', $email)->first();  // No need to join with pw_users
     }
 
     public function updateProfile(int $userId, array $data)
