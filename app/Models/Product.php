@@ -65,7 +65,7 @@ class Product extends Model
     public function exchanges()
     {
         return $this->hasMany(Exchange::class, 'product_id', 'product_id')
-                    ->orWhere('to_product_id', 'product_id');
+                    ->orWhere('to_product_id', $this->getTable() . '.product_id');
     }
 
     public function scopeFilter($query, array $filters)
