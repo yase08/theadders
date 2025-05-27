@@ -15,16 +15,19 @@ use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Kreait\Firebase\Auth as FirebaseAuth; // Impor Firebase Auth
 
 // AuthController
 
 class AuthController extends Controller
 {
     private UserRepositoryInterface $userRepositoryInterface;
+    private FirebaseAuth $firebaseAuth; // Tambahkan properti untuk Firebase Auth
 
-    public function __construct(UserRepositoryInterface $userRepositoryInterface)
+    public function __construct(UserRepositoryInterface $userRepositoryInterface, FirebaseAuth $firebaseAuth)
     {
         $this->userRepositoryInterface = $userRepositoryInterface;
+        $this->firebaseAuth = $firebaseAuth; // Simpan instance Firebase Auth
     }
 
     public function signUp(SignUpRequest $req)
@@ -64,36 +67,59 @@ class AuthController extends Controller
         ];
 
         try {
-            \Log::info('Login attempt for email: ' . $credentials['email']); // Debugging log
+            \Log::info('Login attempt for email: ' . $credentials['email']);
 
             $user = $this->userRepositoryInterface->getUserByEmail($credentials['email']);
 
-            $checked = Hash::check($req->password, $user->password);
-            \Log::info('Input Password: ' . $req->password);
-            \Log::info('Stored Password Hash: ' . $user->password);
-            \Log::info('Password check result: ' . $checked);
-
-            if (!$user || !Hash::check($req->password, $user->password)) {
-                \Log::warning('Invalid credentials for email: ' . $credentials['email']); // Log jika salah
+            if (!$user) {
+                \Log::warning('User not found for email: ' . $credentials['email']);
                 return ApiResponseClass::sendResponse(null, "Invalid email or password", 401);
             }
 
-            $token = auth()->guard('api')->login($user);
+            if (!Hash::check($req->password, $user->password)) {
+                \Log::warning('Invalid password for email: ' . $credentials['email']);
+                return ApiResponseClass::sendResponse(null, "Invalid email or password", 401);
+            }
 
-            \Log::info('Login successful for email: ' . $credentials['email']); // Log sukses
+            $laravelApiToken = auth()->guard('api')->login($user);
 
-            \Log::info('Token: ' . $token);
+            \Log::info('Laravel login successful for email: ' . $credentials['email']);
+            \Log::info('Laravel API Token: ' . $laravelApiToken);
+
+            $firebaseCustomToken = null; // Inisialisasi sebagai null
+            $firebaseUid = (string) $user->users_id; 
+
+            try {
+                // 1. Buat custom token Firebase (ini mengembalikan objek Lcobucci\JWT\Token\Plain)
+                $firebaseTokenObject = $this->firebaseAuth->createCustomToken($firebaseUid);
+                
+                // 2. Konversi objek token ke string menggunakan method toString()
+                $firebaseCustomToken = $firebaseTokenObject->toString(); 
+                
+                \Log::info('Firebase custom token created for UID: ' . $firebaseUid); // Log UID
+                // \Log::info('Firebase custom token string: ' . $firebaseCustomToken); // Opsional: Log token stringnya jika perlu
+            } catch (\Kreait\Firebase\Exception\AuthException $e) {
+                \Log::error('Firebase custom token creation failed: ' . $e->getMessage());
+                // $firebaseCustomToken sudah null, jadi tidak perlu diubah
+            } catch (\Exception $e) { // Menangkap exception lain yang mungkin terjadi (misal saat toString())
+                \Log::error('Error processing Firebase token: ' . $e->getMessage());
+                // $firebaseCustomToken sudah null atau biarkan null
+            }
 
             return response()->json([
                 'user' => new UserResource($user),
-                'token' => $token,
+                'token' => $laravelApiToken, 
+                'firebase_custom_token' => $firebaseCustomToken, // Ini akan berupa string token atau null jika gagal
                 "message" => "success"
             ], 200);
-        } catch (\Throwable $ex) { // Gunakan \Throwable agar menangkap semua error
-            \Log::error('Login error: ' . $ex->getMessage()); // Log error
-            return response()->json(['error' => 'An error occurred: ' . $ex->getMessage()], 500);
+
+        } catch (\Throwable $ex) {
+            \Log::error('Login error: ' . $ex->getMessage() . ' in ' . $ex->getFile() . ' on line ' . $ex->getLine());
+            \Log::error($ex->getTraceAsString()); // Tambahkan stack trace untuk detail lebih
+            return response()->json(['error' => 'An error occurred during login.'], 500);
         }
     }
+
 
     public function updateProfile(UpdateProfileRequest $request)
     {
