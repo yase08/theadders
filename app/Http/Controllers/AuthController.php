@@ -238,4 +238,19 @@ class AuthController extends Controller
             );
         }
     }
+
+    public function logout(Request $request)
+    {
+        try {
+            auth()->guard('api')->logout();
+
+            return response()->json([
+                'message' => 'success',
+            ], 200);
+
+        } catch (\Throwable $ex) {
+            \Log::error('Logout error: ' . $ex->getMessage() . ' in ' . $ex->getFile() . ' on line ' . $ex->getLine());
+            return ApiResponseClass::sendResponse(null, 'An error occurred during logout.', 500);
+        }
+    }
 }
