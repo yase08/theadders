@@ -43,14 +43,14 @@ class MessageController extends Controller
                 'status' => 'sent'
             ]);
 
-            // Check if receiver is active in this chat
+            
             $isReceiverActive = $this->firebaseService->isUserActiveInChat(
                 $receiver->users_id,
                 $sender->users_id,
                 $request->exchange_id
             );
 
-            // Send message to Firebase with notification control
+            
             $this->firebaseService->sendMessage([
                 'sender' => $sender,
                 'receiver' => $receiver,
@@ -75,7 +75,7 @@ class MessageController extends Controller
         ]);
 
         try {
-            // Update user's active chat status in Firebase
+            
             $this->firebaseService->updateClientStatus(auth()->id(), [
                 'status' => 'chat_open',
                 'active_chat' => [
@@ -118,7 +118,7 @@ class MessageController extends Controller
             $otherUserId = $request->other_user_id;
             $exchangeId = $request->exchange_id;
 
-            // Update status in Firebase
+            
             $this->firebaseService->updateClientStatus($userId, [
                 'status' => $status,
                 'active_chat' => $status === 'chat_open' ? [
@@ -173,34 +173,60 @@ class MessageController extends Controller
     public function getChatList()
     {
         try {
-            $userId = auth()->id();
-
-            $exchangeList = Exchange::where(function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->orWhere('to_user_id', $userId);
+            $currentUserId = auth()->id(); 
+    
+            $exchangeList = Exchange::where(function ($query) use ($currentUserId) {
+                $query->where('user_id', $currentUserId)
+                      ->orWhere('to_user_id', $currentUserId);
             })->where('status', 'Approve')
-                ->with(['requester', 'receiver', 'requesterProduct', 'receiverProduct'])
-                ->get();
+              ->with([
+                  'requester' => function ($query) {
+                      $query->select('users_id', 'fullname', 'avatar', 'email'); 
+                  }, 
+                  'receiver' => function ($query) {
+                      $query->select('users_id', 'fullname', 'avatar', 'email'); 
+                  }, 
+                  'requesterProduct', 
+                  'receiverProduct'
+                ])
+              ->orderBy('updated_at', 'desc') 
+              ->get();
+    
+            $chatList = $exchangeList->map(function ($exchange) use ($currentUserId) {
+                $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
 
-            $chatList = $exchangeList->map(function ($exchange) use ($userId) {
-                $otherUser = $exchange->user_id == $userId ? $exchange->receiver : $exchange->requester;
+                if (!$otherUser) {
+                    \Log::warning("Other user not found for exchange_id: " . $exchange->exchange_id);
+                    return null; 
+                }
+    
                 $lastMessage = Message::where('exchange_id', $exchange->exchange_id)
                     ->orderBy('created_at', 'desc')
                     ->first();
-
+                $otherUserFirebaseUid = (string) $otherUser->users_id; 
+    
                 return [
                     'exchange_id' => $exchange->exchange_id,
-                    'user' => $otherUser,
+                    'user' => [ 
+                        'firebase_uid' => $otherUserFirebaseUid, 
+                        'users_id' => $otherUser->users_id, 
+                        'fullname' => $otherUser->fullname,
+                        'avatar' => $otherUser->avatar,
+                        'email' => $otherUser->email, 
+                    ],
                     'last_message' => $lastMessage ? $lastMessage->message : null,
                     'timestamp' => $lastMessage ? $lastMessage->created_at : null,
                     'requester_product' => $exchange->requesterProduct,
-                    'receiver_product' => $exchange->receiverProduct
+                    'receiver_product' => $exchange->receiverProduct,
+                    'unread_count' => 0, 
                 ];
-            });
-
-            return ApiResponseClass::sendResponse($chatList, 'success', 200);
+            })->filter(); 
+    
+            return ApiResponseClass::sendResponse($chatList, 'Chat list retrieved successfully', 200);
         } catch (\Exception $e) {
+            \Log::error('Failed to get chat list: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return ApiResponseClass::sendResponse(null, 'Failed to get chat list: ' . $e->getMessage(), 500);
         }
     }
+    
 }
