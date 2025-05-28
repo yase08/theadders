@@ -19,6 +19,7 @@ class SignUpRequest extends FormRequest
             'fullname' => 'required',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable',
+            'firebase_uid' => 'nullable|string|unique:users,firebase_uid',
             'password' => 'required|min:6',
         ];
     }
