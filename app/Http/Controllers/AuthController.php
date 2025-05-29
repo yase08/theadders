@@ -123,6 +123,7 @@ class AuthController extends Controller
                 'user' => new UserResource($user),
                 'token' => $laravelApiToken,
                 'firebase_custom_token' => $firebaseCustomTokenString,
+                'firebase_uid' => $user->firebase_uid,
                 "message" => "Login successful"
             ], 200);
 
