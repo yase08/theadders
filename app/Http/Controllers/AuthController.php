@@ -41,7 +41,7 @@ class AuthController extends Controller
                 'email' => $req->email,
                 'phone' => $req->phone,
                 'status' => '1',
-                'firebase_uid' => $req->firebase_uid, 
+                'firebase_uid' => $req->firebase_uid,
             ];
 
             $payloadPwUser = [
@@ -49,6 +49,15 @@ class AuthController extends Controller
             ];
 
             $user = $this->userRepositoryInterface->signUp($payloadUser, $payloadPwUser);
+
+            if (empty($user->firebase_uid)) {
+                $user->firebase_uid = (string) $user->users_id;
+                $user->save();
+                $user->refresh();
+                \Log::info('Populated empty firebase_uid for new user: ' . $user->email . ' with Laravel ID: ' . $user->firebase_uid);
+            } else {
+                 \Log::info('Firebase_uid provided during signup: ' . $user->firebase_uid);
+            }
 
             DB::commit();
 
@@ -68,7 +77,7 @@ class AuthController extends Controller
                     \Log::error('Error processing Firebase token during signup: ' . $e->getMessage());
                 }
             } else {
-                 \Log::info('No firebase_uid provided during signup, skipping custom token creation.');
+                 \Log::warning('Firebase_uid is still empty after signup, cannot create custom token.');
             }
 
 
