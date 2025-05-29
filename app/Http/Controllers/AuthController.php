@@ -61,31 +61,8 @@ class AuthController extends Controller
 
             DB::commit();
 
-            $laravelApiToken = auth()->guard('api')->login($user);
-            $firebaseCustomToken = null;
-
-            $firebaseUidForToken = $user->firebase_uid;
-
-            if ($firebaseUidForToken) {
-                try {
-                    $firebaseTokenObject = $this->firebaseAuth->createCustomToken($firebaseUidForToken);
-                    $firebaseCustomToken = $firebaseTokenObject->toString();
-                    \Log::info('Firebase custom token created during signup for UID: ' . $firebaseUidForToken);
-                } catch (\Kreait\Firebase\Exception\AuthException $e) {
-                    \Log::error('Firebase custom token creation failed during signup: ' . $e->getMessage());
-                } catch (\Exception $e) {
-                    \Log::error('Error processing Firebase token during signup: ' . $e->getMessage());
-                }
-            } else {
-                 \Log::warning('Firebase_uid is still empty after signup, cannot create custom token.');
-            }
-
-
             return response()->json([
-                'user' => new UserResource($user->refresh()),
-                'token' => $laravelApiToken,
-                'firebase_custom_token' => $firebaseCustomToken,
-                "message" => "User registered successfully and logged in"
+                "message" => "User registered successfully. Please login."
             ], 201);
 
         } catch (\Exception  $ex) {
@@ -143,7 +120,7 @@ class AuthController extends Controller
             }
 
             return response()->json([
-                'user' => new UserResource($user), 
+                'firebase_uid' => $user->firebase_uid,
                 'token' => $laravelApiToken,
                 'firebase_custom_token' => $firebaseCustomTokenString,
                 "message" => "Login successful"
