@@ -84,7 +84,23 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function getProducts(array $filters)
     {
-        $query = User::with(['products.category', 'products.categorySub', 'products.ratings'])
+        $query = User::with([
+                'products' => function ($query) use ($filters) {
+                    $query->filter([
+                        'category_id' => $filters['category_id'] ?? null,
+                        'category_sub_id' => $filters['category_sub_id'] ?? null,
+                        'search' => $filters['search'] ?? null,
+                        'sort' => $filters['sort'] ?? null,
+                        'size' => $filters['size'] ?? null,
+                        'price_range' => $filters['price_range'] ?? null,
+                    ])->whereDoesntHave('exchanges', function($q) {
+                        $q->where('status', 'Completed');
+                    });
+                },
+                'products.category',
+                'products.categorySub',
+                'products.ratings'
+            ])
             ->whereHas('products', function ($query) use ($filters) {
                 $query->filter([
                     'category_id' => $filters['category_id'] ?? null,
@@ -103,11 +119,12 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
         // Calculate ratings and check wishlist status for each product
         $result->each(function ($user) {
+            // Iterate only over the products that were loaded by the constrained eager load
             $user->products->each(function ($product) {
                 $ratings = $product->ratings()->where('status', 1)->get();
                 $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
                 $product->total_ratings = $ratings->count();
-                
+
                 // Check if product is in user's wishlist
                 $product->is_wishlist = $product->productLoves()
                     ->where('user_id_author', auth()->id())
