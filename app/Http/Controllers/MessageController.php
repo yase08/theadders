@@ -189,7 +189,6 @@ class MessageController extends Controller
                   'requesterProduct', 
                   'receiverProduct'
                 ])
-              ->orderBy('updated_at', 'desc')
               ->get();
 
             $chatList = $exchangeList->map(function ($exchange) use ($currentUserId) {
