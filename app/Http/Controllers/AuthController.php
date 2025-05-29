@@ -157,15 +157,15 @@ class AuthController extends Controller
 
             if ($conflictingUser) {
                 DB::rollBack();
-                Log::error("Conflict: Firebase UID {$actualFirebaseUid} is already linked to a different Laravel user (ID: {$conflictingUser->id}). Cannot link to user {$user->id} with email {$email}.");
+                Log::error("Conflict: Firebase UID {$actualFirebaseUid} is already linked to a different Laravel user (ID: {$conflictingUser->users_id}). Cannot link to user {$user->users_id} with email {$email}.");
                 return ApiResponseClass::sendResponse(null, 'This Firebase account (Google/Apple) is already linked to another user profile in our system.', 409);
             }
 
             if ($user->firebase_uid !== $actualFirebaseUid) {
                 $user->firebase_uid = $actualFirebaseUid;
-                Log::info("Updating Firebase UID to '{$actualFirebaseUid}' for user with email: {$email} (Laravel User ID: {$user->id})");
+                Log::info("Updating Firebase UID to '{$actualFirebaseUid}' for user with email: {$email} (Laravel User ID: {$user->users_id})");
             } else {
-                Log::info("Firebase UID '{$actualFirebaseUid}' already set for user with email: {$email} (Laravel User ID: {$user->id}). No update needed for firebase_uid itself.");
+                Log::info("Firebase UID '{$actualFirebaseUid}' already set for user with email: {$email} (Laravel User ID: {$user->users_id}). No update needed for firebase_uid itself.");
             }
             
             $user->email_verified_at = $user->email_verified_at ?? now();
