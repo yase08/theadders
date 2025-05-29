@@ -23,6 +23,7 @@ Route::get('/test', function () {
 
 // auth start
 Route::post('/signup', [AuthController::class, 'signUp']);
+Route::post('/sync-firebase-user', [AuthController::class, 'syncFirebaseUser']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 // auth end
