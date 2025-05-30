@@ -190,18 +190,17 @@ class MessageController extends Controller
                   'requesterProduct',
                   'receiverProduct'
                 ])
-              // Add search filter for product names
-              ->when($search, function ($query, $search) {
-                  $query->where(function ($q) use ($search) {
-                      $q->whereHas('requesterProduct', function ($productQuery) use ($search) {
-                          $productQuery->where('product_name', 'like', '%' . $search . '%');
-                      })
-                      ->orWhereHas('receiverProduct', function ($productQuery) use ($search) {
-                          $productQuery->where('product_name', 'like', '%' . $search . '%');
-                      });
-                  });
-              })
-              ->get();
+                ->when($search, function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->whereHas('requester', function ($userQuery) use ($search) {
+                            $userQuery->where('fullname', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('receiver', function ($userQuery) use ($search) {
+                            $userQuery->where('fullname', 'like', '%' . $search . '%');
+                        });
+                    });
+                })
+                ->get();
 
             $chatList = $exchangeList->map(function ($exchange) use ($currentUserId) {
                 $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
