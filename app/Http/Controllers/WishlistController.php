@@ -47,10 +47,11 @@ class WishlistController extends Controller
     }
   }
 
-  public function getUserWishlist()
+  public function getUserWishlist(Request $request) // Accept the Request object
   {
     try {
-      $wishlist = $this->wishlistInterface->getUserWishlist();
+      $search = $request->query('search'); // Get the search parameter from the request
+      $wishlist = $this->wishlistInterface->getUserWishlist($search); // Pass the search parameter
       return response()->json([
         'message' => 'success',
         'wishlist' => $wishlist

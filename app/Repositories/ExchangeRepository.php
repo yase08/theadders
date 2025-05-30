@@ -144,7 +144,7 @@ class ExchangeRepository implements ExchangeInterface
     }
   }
 
-  public function getIncomingExchanges()
+  public function getIncomingExchanges($search = null) // Added $search parameter
   {
     try {
       $userId = auth()->id();
@@ -157,9 +157,20 @@ class ExchangeRepository implements ExchangeInterface
           'requester',
           'receiver'
         ])
+        // Add search filter
+        ->when($search, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->whereHas('requesterProduct', function ($q) use ($search) {
+                    $q->where('product_name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('receiverProduct', function ($q) use ($search) {
+                    $q->where('product_name', 'like', '%' . $search . '%');
+                });
+            });
+        })
         ->orderBy('created', 'desc')
         ->get();
-  
+
       // Calculate ratings for each product
       $exchanges->each(function ($exchange) {
           // Calculate requester product ratings if exists
@@ -168,7 +179,7 @@ class ExchangeRepository implements ExchangeInterface
               $exchange->requesterProduct->average_rating = round($requesterRatings->avg('rating'), 1) ?? 0;
               $exchange->requesterProduct->total_ratings = $requesterRatings->count();
           }
-  
+
           // Calculate receiver product ratings if exists
           if ($exchange->receiverProduct) {
               $receiverRatings = $exchange->receiverProduct->ratings()->get();
@@ -176,7 +187,7 @@ class ExchangeRepository implements ExchangeInterface
               $exchange->receiverProduct->total_ratings = $receiverRatings->count();
           }
       });
-  
+
       return $exchanges;
     } catch (\Exception $e) {
       throw new \Exception('Unable to get incoming exchange requests: ' . $e->getMessage());

@@ -48,19 +48,32 @@ class WishlistRepository implements WishlistInterface
         }
     }
 
-    public function getUserWishlist()
+    public function getUserWishlist($search = null) // Added $search parameter
     {
         try {
             $wishlist = ProductLove::where('user_id_author', auth()->id())
                 ->where('status', 1)
                 ->with(['product.category', 'product.categorySub', 'product.ratings'])
+                // Add search filter
+                ->when($search, function ($query, $search) {
+                    $query->whereHas('product', function ($q) use ($search) {
+                        $q->where('product_name', 'like', '%' . $search . '%');
+                    });
+                })
                 ->get();
 
             // Calculate ratings for each product in wishlist
             $wishlist->each(function ($item) {
-                $ratings = $item->product->ratings()->where('status', 1)->get();
-                $item->product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
-                $item->product->total_ratings = $ratings->count();
+                // Ensure product relationship is loaded before accessing ratings
+                if ($item->product) {
+                    $ratings = $item->product->ratings()->where('status', 1)->get();
+                    $item->product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
+                    $item->product->total_ratings = $ratings->count();
+                } else {
+                    // Handle case where product might not be loaded (though with() should prevent this)
+                    $item->product->average_rating = 0;
+                    $item->product->total_ratings = 0;
+                }
             });
 
             return $wishlist;

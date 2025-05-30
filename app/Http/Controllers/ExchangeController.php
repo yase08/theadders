@@ -178,10 +178,11 @@ class ExchangeController extends Controller
     }
   }
 
-  public function getIncomingExchanges()
+  public function getIncomingExchanges(Request $request) // Accept the Request object
   {
     try {
-      $exchanges = $this->exchangeInterface->getIncomingExchanges();
+      $search = $request->query('search'); // Get the search parameter from the request
+      $exchanges = $this->exchangeInterface->getIncomingExchanges($search); // Pass the search parameter
       return response()->json([
         'success' => true,
         'data' => $exchanges,

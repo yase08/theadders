@@ -170,10 +170,11 @@ class MessageController extends Controller
         }
     }
 
-    public function getChatList()
+    public function getChatList(Request $request) // Accept the Request object
     {
         try {
             $currentUserId = auth()->id();
+            $search = $request->query('search'); // Get the search parameter
 
             $exchangeList = Exchange::where(function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId)
@@ -182,21 +183,32 @@ class MessageController extends Controller
               ->with([
                   'requester' => function ($query) {
                       $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                  }, 
+                  },
                   'receiver' => function ($query) {
                       $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                  }, 
-                  'requesterProduct', 
+                  },
+                  'requesterProduct',
                   'receiverProduct'
                 ])
+              // Add search filter for product names
+              ->when($search, function ($query, $search) {
+                  $query->where(function ($q) use ($search) {
+                      $q->whereHas('requesterProduct', function ($productQuery) use ($search) {
+                          $productQuery->where('product_name', 'like', '%' . $search . '%');
+                      })
+                      ->orWhereHas('receiverProduct', function ($productQuery) use ($search) {
+                          $productQuery->where('product_name', 'like', '%' . $search . '%');
+                      });
+                  });
+              })
               ->get();
 
             $chatList = $exchangeList->map(function ($exchange) use ($currentUserId) {
                 $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
-                
+
                 if (!$otherUser) {
                     \Log::warning("Other user not found for exchange_id: " . $exchange->exchange_id . " during getChatList for user_id: " . $currentUserId);
-                    return null; 
+                    return null;
                 }
 
                 $lastMessage = Message::where('exchange_id', $exchange->exchange_id)
@@ -210,7 +222,7 @@ class MessageController extends Controller
                     $otherUserFirebaseUid = (string) $otherUser->users_id;
                     \Log::warning("Firebase UID not found for otherUser (ID Laravel: {$otherUser->users_id}), falling back to Laravel ID for exchange_id: {$exchange->exchange_id}");
                 }
-                
+
                 $userOutput = [
                     'firebase_uid' => $otherUserFirebaseUid,
                     'users_id' => $otherUser->users_id,
@@ -226,9 +238,9 @@ class MessageController extends Controller
                     'timestamp' => $lastMessage ? $lastMessage->created_at : null,
                     'requester_product' => $exchange->requesterProduct,
                     'receiver_product' => $exchange->receiverProduct,
-                    'unread_count' => 0, 
+                    'unread_count' => 0,
                 ];
-            })->filter()->values(); 
+            })->filter()->values();
 
             return ApiResponseClass::sendResponse($chatList, 'Chat list retrieved successfully', 200);
         } catch (\Exception $e) {
