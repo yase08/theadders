@@ -25,7 +25,7 @@ class ProductRequest extends FormRequest
     {
         return [
             'category_id' => 'nullable|integer|exists:mst_category,category_id',
-            'category_sub_id' => 'nullable|integer|exists:mst_category_sub,category_sub_id',
+            // 'category_sub_id' => 'nullable|integer|exists:mst_category_sub,category_sub_id',
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -48,7 +48,7 @@ class ProductRequest extends FormRequest
             'product_name.string' => 'Product name must be a text.',
             'product_name.max' => 'Product name must not exceed 255 characters.',
             'category_id.exists' => 'The selected category is invalid.',
-            'category_sub_id.exists' => 'The selected subcategory is invalid.',
+            // 'category_sub_id.exists' => 'The selected subcategory is invalid.',
             'price.numeric' => 'Price must be a number.',
             'item_codition.in' => 'Item condition is invalid.',
         ];

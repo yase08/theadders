@@ -17,7 +17,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
         try {
             $product = Product::create([
                 'category_id' => $productData['category_id'],
-                'category_sub_id' => $productData['category_sub_id'],
+                // 'category_sub_id' => $productData['category_sub_id'],
                 'product_name' => $productData['product_name'],
                 'description' => $productData['description'] ?? null,
                 'thumbail' => $productData['thumbail'] ?? null,
@@ -296,7 +296,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
     
                 $updateData = [
                     'category_id' => $productData['category_id'] ?? $product->category_id,
-                    'category_sub_id' => $productData['category_sub_id'] ?? $product->category_sub_id,
+                    // 'category_sub_id' => $productData['category_sub_id'] ?? $product->category_sub_id,
                     'product_name' => $productData['product_name'] ?? $product->product_name,
                     'description' => $productData['description'] ?? $product->description,
                     'price' => $productData['price'] ?? $product->price,
