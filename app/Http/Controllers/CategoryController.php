@@ -27,7 +27,7 @@ class CategoryController extends Controller
             DB::commit();
             return response()->json([
                 'category' => $category,
-                "message" => "success"
+                "message" => "Success"
             ], 201);
             } catch (\Throwable $th) {
             DB::rollBack();
@@ -45,7 +45,7 @@ class CategoryController extends Controller
 
             return response()->json([
                 'categories' => $categories,
-                "message" => "success"
+                "message" => "Success"
             ], 200);
             } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);

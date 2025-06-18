@@ -106,3 +106,10 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/product/{productId}/ratings', [RatingController::class, 'getProductRatings']);
     Route::get('/user/{userId}/ratings', [RatingController::class, 'getUserRatings']);
 });
+
+Route::middleware(JwtMiddleware::class)->group(function () {
+    // Rating routes
+    Route::post('/rate-user', [RatingController::class, 'rateExchangeUser']);
+    Route::get('/user/{userId}/ratings/received', [RatingController::class, 'getUserRatings']);
+    Route::get('/user/{userId}/ratings/given', [RatingController::class, 'getGivenRatings']);
+});

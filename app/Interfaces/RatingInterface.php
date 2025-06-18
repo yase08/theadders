@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface RatingInterface
 {
-    public function rateExchangeProduct(array $data);
-    public function getProductRatings(int $productId);
+    public function rateExchangeUser(array $data);
     public function getUserRatings(int $userId);
+    public function getGivenRatings(int $userId);
 }

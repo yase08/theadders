@@ -3,12 +3,12 @@
 namespace App\Repositories;
 
 use App\Interfaces\RatingInterface;
-use App\Models\ProductRating;
+use App\Models\UserRating;
 use App\Models\Exchange;
 
 class RatingRepository implements RatingInterface
 {
-    public function rateExchangeProduct(array $data)
+    public function rateExchangeUser(array $data)
     {
         try {
             // Verify exchange completion
@@ -17,56 +17,55 @@ class RatingRepository implements RatingInterface
                 ->firstOrFail();
 
             // Verify user is part of the exchange
-            $userId = auth()->id();
-            if ($userId !== $exchange->user_id && $userId !== $exchange->to_user_id) {
+            $raterUserId = auth()->id();
+            if ($raterUserId !== $exchange->user_id && $raterUserId !== $exchange->to_user_id) {
                 throw new \Exception('Unauthorized to rate this exchange');
             }
 
-            // Determine which product to rate based on who's rating and the target product
-            $productToRate = $data['target_product_id'];
+            // Determine which user to rate
+            $ratedUserId = $data['rated_user_id'];
             
-            // Verify the product belongs to the exchange
-            if ($productToRate != $exchange->product_id && $productToRate != $exchange->to_product_id) {
-                throw new \Exception('Invalid product for this exchange');
+            // Verify the rated user is part of the exchange
+            if ($ratedUserId != $exchange->user_id && $ratedUserId != $exchange->to_user_id) {
+                throw new \Exception('Invalid user for this exchange');
             }
 
-            // Verify user is not rating their own product
-            if (($userId === $exchange->user_id && $productToRate === $exchange->product_id) ||
-                ($userId === $exchange->to_user_id && $productToRate === $exchange->to_product_id)) {
-                throw new \Exception('Cannot rate your own product');
+            // Verify user is not rating themselves
+            if ($raterUserId === $ratedUserId) {
+                throw new \Exception('Cannot rate yourself');
             }
 
-            // Check if user has already rated this product in this exchange
-            $existingRating = ProductRating::where('product_id', $productToRate)
-                ->where('user_id', $userId)
+            // Check if user has already rated this user in this exchange
+            $existingRating = UserRating::where('rated_user_id', $ratedUserId)
+                ->where('rater_user_id', $raterUserId)
                 ->where('exchange_id', $data['exchange_id'])
                 ->where('status', 1)
                 ->exists();
 
             if ($existingRating) {
-                throw new \Exception('You have already rated this product in this exchange');
+                throw new \Exception('You have already rated this user in this exchange');
             }
 
-            return ProductRating::create([
-                'product_id' => $productToRate,
-                'user_id' => $userId,
+            return UserRating::create([
+                'rated_user_id' => $ratedUserId,
+                'rater_user_id' => $raterUserId,
                 'rating' => $data['rating'],
                 'exchange_id' => $data['exchange_id'],
                 'created' => now(),
-                'author' => auth()->id(),
+                'author' => $raterUserId,
                 'status' => 1
             ]);
         } catch (\Exception $e) {
-            throw new \Exception('Unable to rate product: ' . $e->getMessage());
+            throw new \Exception('Unable to rate user: ' . $e->getMessage());
         }
     }
 
-    public function getProductRatings(int $productId)
+    public function getUserRatings(int $userId)
     {
         try {
-            $ratings = ProductRating::where('product_id', $productId)
+            $ratings = UserRating::where('rated_user_id', $userId)
                 ->where('status', 1)
-                ->with('user')
+                ->with(['rater', 'exchange'])
                 ->get();
 
             $averageRating = $ratings->avg('rating');
@@ -78,19 +77,19 @@ class RatingRepository implements RatingInterface
                 'total_ratings' => $totalRatings
             ];
         } catch (\Exception $e) {
-            throw new \Exception('Unable to get product ratings: ' . $e->getMessage());
+            throw new \Exception('Unable to get user ratings: ' . $e->getMessage());
         }
     }
 
-    public function getUserRatings(int $userId)
+    public function getGivenRatings(int $userId)
     {
         try {
-            return ProductRating::where('user_id', $userId)
+            return UserRating::where('rater_user_id', $userId)
                 ->where('status', 1)
-                ->with('product')
+                ->with(['ratedUser', 'exchange'])
                 ->get();
         } catch (\Exception $e) {
-            throw new \Exception('Unable to get user ratings: ' . $e->getMessage());
+            throw new \Exception('Unable to get given ratings: ' . $e->getMessage());
         }
     }
 }

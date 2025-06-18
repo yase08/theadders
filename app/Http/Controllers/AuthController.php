@@ -57,7 +57,7 @@ class AuthController extends Controller
             return response()->json([
                 'user' => new UserResource($user->refresh()),
                 'firebase_uid' => $user->firebase_uid,
-                "message" => "User registered and logged in successfully."
+                "message" => "Success"
             ], 201);
 
         } catch (\Exception $ex) {
@@ -116,7 +116,7 @@ class AuthController extends Controller
                 'token' => $laravelApiToken,
                 'firebase_custom_token' => $firebaseCustomTokenString,
                 'firebase_uid' => $user->firebase_uid,
-                "message" => "Login successful"
+                "message" => "Success"
             ], 200);
 
         } catch (\Throwable $ex) {
@@ -179,7 +179,7 @@ class AuthController extends Controller
                 'user' => new UserResource($user->refresh()),
                 'firebase_uid' => $user->firebase_uid,
                 'token' => $laravelApiToken,
-                "message" => "Firebase UID synced and user logged in successfully."
+                "message" => "Success."
             ], 200);
 
         } catch (\Throwable $ex) {
