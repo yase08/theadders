@@ -29,7 +29,7 @@ class CategorySubController extends Controller
 
             return response()->json([
                 'category_sub' => $subCategory,
-                "message" => "Success"
+                "message" => success
             ], 201);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -48,7 +48,7 @@ class CategorySubController extends Controller
 
             return response()->json([
                 'category_subs' => $subCategory,
-                "message" => "Success"
+                "message" => "success"
             ], 200);
             } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);

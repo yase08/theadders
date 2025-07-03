@@ -10,8 +10,8 @@ class CreateUserRatingsTable extends Migration
     {
         Schema::create('trs_user_rating', function (Blueprint $table) {
             $table->id('user_rating_id');
-            $table->unsignedBigInteger('rated_user_id');
-            $table->unsignedBigInteger('rater_user_id');
+            $table->unsignedInteger('rated_user_id'); // Changed from unsignedBigInteger
+            $table->unsignedInteger('rater_user_id'); // Changed from unsignedBigInteger
             $table->unsignedBigInteger('exchange_id');
             $table->integer('rating');
             $table->timestamp('created')->useCurrent();
@@ -34,7 +34,8 @@ class CreateUserRatingsTable extends Migration
                   ->onDelete('cascade');
 
             $table->unique(['rater_user_id', 'rated_user_id', 'exchange_id'], 'unique_user_rating');
-        });
+        })->charset('utf8mb4')->collation('utf8mb4_unicode_ci'); // Added charset and collation
+
     }
 
     public function down()

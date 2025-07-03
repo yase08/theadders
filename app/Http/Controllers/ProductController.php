@@ -134,7 +134,7 @@ class ProductController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Success'
+                'message' => 'success'
             ]);
         } catch (\Exception $e) {
             return response()->json([
