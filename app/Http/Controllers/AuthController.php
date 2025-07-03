@@ -179,7 +179,7 @@ class AuthController extends Controller
                 'user' => new UserResource($user->refresh()),
                 'firebase_uid' => $user->firebase_uid,
                 'token' => $laravelApiToken,
-                "message" => "success."
+                "message" => "success"
             ], 200);
 
         } catch (\Throwable $ex) {
