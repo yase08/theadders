@@ -17,7 +17,7 @@ class ProductIndexRequest extends FormRequest
             'category_id' => 'nullable|integer|exists:mst_category,category_id',
             'category_sub_id' => 'nullable|integer|exists:mst_category_sub,category_sub_id',
             'search' => 'nullable|string|max:255',
-            'sort' => 'nullable|string|in:recent,price_high,price_low,relevance',
+            'sort' => 'nullable|string|in:recent,relevance', // Removed price_high, price_low
             'size' => 'nullable|string|in:small,medium,large',
             'price_range' => 'nullable|string|in:1-30,20-60,50-110,100-210,200-500',
             'per_page' => 'nullable|integer|min:1|max:100',

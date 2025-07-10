@@ -90,21 +90,14 @@ class Product extends Model
         });
 
         $query->when($filters['price_range'] ?? false, function ($query, $range) {
-            return match ($range) {
-                '1-30' => $query->whereBetween('price', [1, 30]),
-                '20-60' => $query->whereBetween('price', [20, 60]),
-                '50-110' => $query->whereBetween('price', [50, 110]),
-                '100-210' => $query->whereBetween('price', [100, 210]),
-                '200-500' => $query->whereBetween('price', [200, 500]),
-                default => $query,
-            };
+            // Filter directly by the stored price range string
+            return $query->where('price', $range);
         });
 
         $query->when($filters['sort'] ?? false, function ($query, $sort) {
             return match ($sort) {
                 'recent' => $query->orderBy('created', 'desc'),
-                'price_high' => $query->orderBy('price', 'desc'),
-                'price_low' => $query->orderBy('price', 'asc'),
+                // Removed 'price_high' and 'price_low' as 'price' is now a string range
                 'relevance' => $query->orderBy('view_count', 'desc'),
                 default => $query->orderBy('created', 'desc'),
             };
