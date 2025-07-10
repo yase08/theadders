@@ -19,7 +19,7 @@ class Product extends Model
         'product_name',
         'description',
         'thumbail',
-        'price',
+        'price', // This will now store the price range string
         'item_codition',
         'view_count',
         'created',
@@ -29,7 +29,7 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        // 'price' => 'decimal:2', // Remove or comment out this line
         'view_count' => 'integer',
     ];
 

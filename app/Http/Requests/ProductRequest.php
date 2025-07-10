@@ -29,7 +29,7 @@ class ProductRequest extends FormRequest
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'price' => 'nullable|numeric|min:0',
+            'price' => 'nullable|string|in:1-30,20-60,50-110,100-210,200-500', // Changed to string and specific values
             'item_codition' => 'nullable|integer|in:1,2,3',
             'product_images' => 'nullable|array',
             'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
@@ -49,7 +49,7 @@ class ProductRequest extends FormRequest
             'product_name.max' => 'Product name must not exceed 255 characters.',
             'category_id.exists' => 'The selected category is invalid.',
             // 'category_sub_id.exists' => 'The selected subcategory is invalid.',
-            'price.numeric' => 'Price must be a number.',
+            'price.in' => 'The selected price range is invalid.', // Updated message
             'item_codition.in' => 'Item condition is invalid.',
         ];
     }
