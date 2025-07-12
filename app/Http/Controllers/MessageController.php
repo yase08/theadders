@@ -179,16 +179,33 @@ class MessageController extends Controller
             $exchangeList = Exchange::where(function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId)
                       ->orWhere('to_user_id', $currentUserId);
-            })->where('status', 'Approve')
-              ->with([
-                  'requester' => function ($query) {
-                      $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                  },
-                  'receiver' => function ($query) {
-                      $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                  },
-                  'requesterProduct',
-                  'receiverProduct'
+            })
+            // New condition: Include 'Approve' exchanges OR 'Completed' exchanges that are not fully rated
+            ->where(function ($query) {
+                $query->where('status', 'Approve') // Always include exchanges with 'Approve' status
+                      ->orWhere(function ($query) { // For 'Completed' exchanges, apply rating check
+                          $query->where('status', 'Completed')
+                                ->where(function ($q) {
+                                    // Include if the requester has NOT rated the receiver for this exchange
+                                    $q->whereDoesntHave('ratingsGivenByRequester', function ($ratingQuery) {
+                                        $ratingQuery->whereColumn('rated_user_id', 'trs_exchange.to_user_id');
+                                    })
+                                    // OR if the receiver has NOT rated the requester for this exchange
+                                    ->orWhereDoesntHave('ratingsGivenByReceiver', function ($ratingQuery) {
+                                        $ratingQuery->whereColumn('rated_user_id', 'trs_exchange.user_id');
+                                    });
+                                });
+                      });
+            })
+            ->with([
+                'requester' => function ($query) {
+                    $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
+                },
+                'receiver' => function ($query) {
+                    $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
+                },
+                'requesterProduct',
+                'receiverProduct'
                 ])
                 ->when($search, function ($query, $search) {
                     $query->where(function ($q) use ($search) {
@@ -230,6 +247,12 @@ class MessageController extends Controller
                     'email' => $otherUser->email
                 ];
 
+                // Check if the current user has rated the other user for this exchange
+                $hasRatedOtherUser = \App\Models\UserRating::where('rater_user_id', $currentUserId)
+                    ->where('rated_user_id', $otherUser->users_id)
+                    ->where('exchange_id', $exchange->exchange_id)
+                    ->exists();
+
                 return [
                     'exchange_id' => $exchange->exchange_id,
                     'user' => $userOutput,
@@ -238,6 +261,7 @@ class MessageController extends Controller
                     'requester_product' => $exchange->requesterProduct,
                     'receiver_product' => $exchange->receiverProduct,
                     'unread_count' => 0,
+                    'has_rated_other_user' => $hasRatedOtherUser, // New field
                 ];
             })->filter()->values();
 
