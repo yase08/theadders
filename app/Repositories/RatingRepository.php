@@ -12,9 +12,15 @@ class RatingRepository implements RatingInterface
     {
         try {
             // Verify exchange completion
-            $exchange = Exchange::where('exchange_id', $data['exchange_id'])
-                ->where('status', 'Completed')
-                ->firstOrFail();
+            $exchange = Exchange::where('exchange_id', $data['exchange_id'])->first();
+
+            if (!$exchange) {
+                throw new \Exception('Exchange not found.');
+            }
+
+            if ($exchange->status !== 'Completed') {
+                throw new \Exception('Exchange must be completed to be rated.');
+            }
 
             // Verify user is part of the exchange
             $raterUserId = auth()->id();
