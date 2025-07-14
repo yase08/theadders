@@ -262,7 +262,7 @@ class MessageController extends Controller
                               ->where('rated_user_id', $exchange->user_id);
                         });
                     })
-                    ->orderBy('created_at', 'asc') // Get the first rating created
+                    ->orderBy('created', 'asc') // Changed from 'created_at' to 'created'
                     ->value('rater_user_id'); // Get the ID of the user who gave that first rating
 
                 return [
