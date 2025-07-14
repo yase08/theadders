@@ -247,11 +247,23 @@ class MessageController extends Controller
                     'email' => $otherUser->email
                 ];
 
-                // Returns the rater_user_id (which is $currentUserId) if a rating exists, otherwise null
-                $hasRatedOtherUser = \App\Models\UserRating::where('rater_user_id', $currentUserId)
-                    ->where('rated_user_id', $otherUser->users_id)
-                    ->where('exchange_id', $exchange->exchange_id)
-                    ->value('rater_user_id'); // Get the rater_user_id if it exists, otherwise null
+                // Check if either user in the exchange has rated the other user for this exchange
+                // Returns the rater_user_id of the first rating found, otherwise null
+                $ratingGiven = \App\Models\UserRating::where('exchange_id', $exchange->exchange_id)
+                    ->where(function ($query) use ($exchange) {
+                        // Case 1: Requester rated Receiver
+                        $query->where(function ($q) use ($exchange) {
+                            $q->where('rater_user_id', $exchange->user_id)
+                              ->where('rated_user_id', $exchange->to_user_id);
+                        })
+                        // Case 2: Receiver rated Requester
+                        ->orWhere(function ($q) use ($exchange) {
+                            $q->where('rater_user_id', $exchange->to_user_id)
+                              ->where('rated_user_id', $exchange->user_id);
+                        });
+                    })
+                    ->orderBy('created_at', 'asc') // Get the first rating created
+                    ->value('rater_user_id'); // Get the ID of the user who gave that first rating
 
                 return [
                     'exchange_id' => $exchange->exchange_id,
@@ -261,7 +273,7 @@ class MessageController extends Controller
                     'requester_product' => $exchange->requesterProduct,
                     'receiver_product' => $exchange->receiverProduct,
                     'unread_count' => 0,
-                    'has_rated_other_user' => $hasRatedOtherUser, // Now it will be the rater_user_id or null
+                    'has_rated_other_user' => $ratingGiven, // Now it will be the rater_user_id or null
                 ];
             })->filter()->values();
 
