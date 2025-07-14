@@ -247,11 +247,11 @@ class MessageController extends Controller
                     'email' => $otherUser->email
                 ];
 
-                // Check if the current user has rated the other user for this exchange
+                // Returns the rater_user_id (which is $currentUserId) if a rating exists, otherwise null
                 $hasRatedOtherUser = \App\Models\UserRating::where('rater_user_id', $currentUserId)
                     ->where('rated_user_id', $otherUser->users_id)
                     ->where('exchange_id', $exchange->exchange_id)
-                    ->exists();
+                    ->value('rater_user_id'); // Get the rater_user_id if it exists, otherwise null
 
                 return [
                     'exchange_id' => $exchange->exchange_id,
@@ -261,7 +261,7 @@ class MessageController extends Controller
                     'requester_product' => $exchange->requesterProduct,
                     'receiver_product' => $exchange->receiverProduct,
                     'unread_count' => 0,
-                    'has_rated_other_user' => $hasRatedOtherUser, // New field
+                    'has_rated_other_user' => $hasRatedOtherUser, // Now it will be the rater_user_id or null
                 ];
             })->filter()->values();
 
