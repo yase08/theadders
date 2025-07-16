@@ -35,6 +35,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
     Route::get('/user/{userId}', [AuthController::class, 'getUserById']);
+    Route::post('/profile/additional-info', [AuthController::class, 'updateAdditionalProfileInfo']);
 });
 // category start
 Route::post('/category', [CategoryController::class, 'storeCategory']);

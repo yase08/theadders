@@ -321,4 +321,33 @@ class AuthController extends Controller
             return ApiResponseClass::sendResponse(null, 'An error occurred during logout.', 500);
         }
     }
+
+    public function updateAdditionalProfileInfo(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'hobbies' => 'nullable|string|max:1000',
+                'toys' => 'nullable|string|max:1000',
+                'fashion' => 'nullable|string|max:1000',
+            ]);
+
+            $user = auth()->user();
+
+            if (!$user) {
+                return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
+            }
+
+            $user->update($validatedData);
+
+            return response()->json([
+                'message' => 'success',
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponseClass::sendResponse($e->errors(), 'Validation errors', 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating additional profile info: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
+            return ApiResponseClass::sendResponse(null, "An error occurred: " . $e->getMessage(), 500);
+        }
+    }
 }
