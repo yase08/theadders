@@ -99,6 +99,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::delete('/wishlist/{productId}', [WishlistController::class, 'removeFromWishlist']);
     Route::get('/wishlist', [WishlistController::class, 'getUserWishlist']);
     Route::get('/wishlist/check/{productId}', [WishlistController::class, 'checkWishlist']);
+    Route::get('/wishlist/my-product-wishlisters', [WishlistController::class, 'getUsersWhoWishlistedMyProducts']);
 });
 
 Route::middleware(JwtMiddleware::class)->group(function () {

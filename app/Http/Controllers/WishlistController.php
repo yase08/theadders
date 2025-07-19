@@ -47,11 +47,11 @@ class WishlistController extends Controller
     }
   }
 
-  public function getUserWishlist(Request $request) // Accept the Request object
+  public function getUserWishlist(Request $request)
   {
     try {
-      $search = $request->query('search'); // Get the search parameter from the request
-      $wishlist = $this->wishlistInterface->getUserWishlist($search); // Pass the search parameter
+      $search = $request->query('search');
+      $wishlist = $this->wishlistInterface->getUserWishlist($search);
       return response()->json([
         'message' => 'success',
         'wishlist' => $wishlist
@@ -73,6 +73,24 @@ class WishlistController extends Controller
         'exists' => $exists
       ], 200);
     } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
+
+  public function getUsersWhoWishlistedMyProducts()
+  {
+    try {
+      $currentUserId = auth()->id();
+      $wishlisters = $this->wishlistInterface->getUsersWhoWishlistedMyProducts($currentUserId);
+      return response()->json([
+        'message' => 'success',
+        'wishlist' => $wishlisters
+      ], 200);
+    } catch (\Throwable $th) {
+      \Log::error('Failed to get users who wishlisted products: ' . $th->getMessage() . ' Stack: ' . $th->getTraceAsString());
       return response()->json([
         'message' => 'error',
         'error' => $th->getMessage()
