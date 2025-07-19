@@ -98,17 +98,34 @@ class WishlistRepository implements WishlistInterface
     {
         try {
             
-            $wishlisters = ProductLove::where('user_id', $userId) 
-                ->with(['authorUser' => function ($query) { 
-                    $query->select('users_id', 'fullname', 'email', 'avatar'); 
-                }])
-                ->get()
-                ->pluck('authorUser') 
-                ->filter() 
-                ->unique('users_id') 
-                ->values(); 
+            $productLoves = ProductLove::where('user_id', $userId)
+                ->with([
+                    'authorUser' => function ($query) {
+                        $query->select('users_id', 'fullname', 'email', 'avatar');
+                    },
+                    'product' => function ($query) {
+                        $query->select('product_id', 'product_name', 'product_image', 'price', 'author');
+                    }
+                ])
+                ->get();
 
-            return $wishlisters;
+            $wishlistersWithProducts = collect();
+
+            
+            $productLoves->groupBy('user_id_author')->each(function ($wishlistItems, $wishlisterId) use ($wishlistersWithProducts) {
+                $firstItem = $wishlistItems->first();
+                if ($firstItem && $firstItem->authorUser) {
+                    $wishlisterData = $firstItem->authorUser->toArray(); 
+                    
+                    $wishlisterData['wishlisted_products'] = $wishlistItems->map(function ($item) {
+                        return $item->product; 
+                    })->filter()->values(); 
+
+                    $wishlistersWithProducts->push($wishlisterData);
+                }
+            });
+
+            return $wishlistersWithProducts;
         } catch (\Exception $e) {
             throw new \Exception('Unable to get users who wishlisted your products: ' . $e->getMessage());
         }
