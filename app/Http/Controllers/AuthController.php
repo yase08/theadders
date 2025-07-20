@@ -340,7 +340,12 @@ class AuthController extends Controller
                 return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
             }
 
+            \Log::info('Validated data for update:', $validatedData);
+            \Log::info('User before update:', $user->toArray());
+
             $user->update($validatedData);
+
+            \Log::info('User after update:', $user->refresh()->toArray());
 
             return response()->json([
                 'message' => 'success',

@@ -33,8 +33,8 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'firebase_uid',
         'hobbies', 
-        'toys',    
-        'fashion'  
+        'toys',
+        'fashion'
     ];
 
     protected $hidden = [
