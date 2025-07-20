@@ -104,7 +104,7 @@ class WishlistRepository implements WishlistInterface
                         $query->select('users_id', 'fullname', 'email', 'avatar');
                     },
                     'product' => function ($query) {
-                        $query->select('product_id', 'product_name', 'product_image', 'price', 'author');
+                        $query->select('product_id', 'product_name', 'thumbail', 'price', 'author');
                     }
                 ])
                 ->get();
