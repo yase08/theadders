@@ -345,7 +345,11 @@ class AuthController extends Controller
                 return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
             }
 
-            $user->update($validatedData);
+            $user->update(
+                array_merge($validatedData, [
+                    'fashion' => $request->fashion,
+                ])
+            );
 
             \Log::info('User after update:', $user->refresh()->toArray());
 
