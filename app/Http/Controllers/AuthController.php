@@ -337,9 +337,10 @@ class AuthController extends Controller
             ]);
 
             \Log::info('Validated data for update:', $validatedData);
-            \Log::info('User before update:', $user->toArray());
 
             $user = auth()->user();
+
+            \Log::info('User before update:', $user->toArray());
 
             if (!$user) {
                 return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
