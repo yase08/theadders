@@ -328,6 +328,7 @@ class AuthController extends Controller
     public function updateAdditionalProfileInfo(Request $request)
     {
         try {
+            // debug
             \Log::info('Raw request input:', $request->all());
 
             $validatedData = $request->validate([
