@@ -328,20 +328,22 @@ class AuthController extends Controller
     public function updateAdditionalProfileInfo(Request $request)
     {
         try {
+            \Log::info('Raw request input:', $request->all());
+
             $validatedData = $request->validate([
                 'hobbies' => 'nullable|string|max:1000',
                 'toys' => 'nullable|string|max:1000',
                 'fashion' => 'nullable|string|max:1000',
             ]);
 
+            \Log::info('Validated data for update:', $validatedData);
+            \Log::info('User before update:', $user->toArray());
+
             $user = auth()->user();
 
             if (!$user) {
                 return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
             }
-
-            \Log::info('Validated data for update:', $validatedData);
-            \Log::info('User before update:', $user->toArray());
 
             $user->update($validatedData);
 
