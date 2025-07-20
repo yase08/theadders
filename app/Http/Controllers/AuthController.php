@@ -111,11 +111,14 @@ class AuthController extends Controller
                \Log::error('Error processing Firebase custom token during login: ' . $e->getMessage());
             }
 
+            $hasAdditionalProfileInfo = !empty($user->hobbies) && !empty($user->toys) && !empty($user->fashion);
+
             return response()->json([
                 'user' => new UserResource($user),
                 'token' => $laravelApiToken,
                 'firebase_custom_token' => $firebaseCustomTokenString,
                 'firebase_uid' => $user->firebase_uid,
+                'has_additional_profile_info' => $hasAdditionalProfileInfo,
                 "message" => "success"
             ], 200);
 
