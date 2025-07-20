@@ -333,7 +333,6 @@ class AuthController extends Controller
             $validatedData = $request->validate([
                 'hobbies' => 'nullable|string|max:1000',
                 'toys' => 'nullable|string|max:1000',
-                'fashion' => 'nullable|string|max:1000',
             ]);
 
             \Log::info('Validated data for update:', $validatedData);
