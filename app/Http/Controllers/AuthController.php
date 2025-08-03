@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Kreait\Firebase\Auth as FirebaseAuth; 
+use App\Models\User;
 
 class AuthController extends Controller
 {

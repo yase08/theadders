@@ -16,6 +16,8 @@ class UserResource extends JsonResource
             'location' => $this->location,
             'bio' => $this->bio,
             'avatar' => $this->avatar,
+            'firebase_uid' => $this->firebase_uid,
+            'email_verified_at' => $this->email_verified_at,
         ];
 
         if ($this->additional['stats'] ?? null) {
