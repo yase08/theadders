@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Interfaces\ExchangeInterface;
 use App\Models\Exchange;
+use App\Models\Product;
 
 class ExchangeRepository implements ExchangeInterface
 {
@@ -14,6 +15,13 @@ class ExchangeRepository implements ExchangeInterface
       $targetUserId = $data['to_user_id'];
       $productId = $data['product_id'];
       $toProductId = $data['to_product_id'];
+
+      $product = Product::find($productId);
+      $toProduct = Product::find($toProductId);
+
+      if (!$product || !$toProduct || $product->price !== $toProduct->price) {
+        throw new \Exception('Sorry, your item is not available within this price range.');
+      }
 
       $existingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
 
