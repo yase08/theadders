@@ -221,7 +221,7 @@ class AuthController extends Controller
     public function getProfile()
     {
         try {
-            $user = auth()->user();
+            $user = auth()->user()->load('products');
             $userStats = $this->getUserStats($user->users_id);
 
             $response = (new UserResource($user))->additional([
