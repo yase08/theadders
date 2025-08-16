@@ -24,6 +24,10 @@ class UserResource extends JsonResource
             $array['stats'] = $this->additional['stats'];
         }
 
+        if ($this->additional['products'] ?? null) {
+            $array['products'] = $this->additional['products'];
+        }
+
         return $array;
     }
 }
