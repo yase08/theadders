@@ -222,7 +222,10 @@ class AuthController extends Controller
     {
         try {
             $user = auth()->user()->load('products');
-            $userStats = $this->getUserStats($user->users_id);
+
+            Log::info('User data with products:', ['user' => $user->toArray()]);
+
+            $userStats = $this->userRepository->getUserStats($user->users_id);
 
             $response = (new UserResource($user))->additional([
                 'stats' => [
