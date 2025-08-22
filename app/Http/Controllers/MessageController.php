@@ -179,6 +179,16 @@ class MessageController extends Controller
         }
     }
 
+    public function clearAllMessages()
+    {
+        try {
+            $this->firebaseService->clearAllMessages();
+            return ApiResponseClass::sendResponse(null, 'All messages cleared successfully', 200);
+        } catch (\Exception $e) {
+            return ApiResponseClass::sendResponse(null, 'Failed to clear messages: ' . $e->getMessage(), 500);
+        }
+    }
+
     public function getChatList(Request $request)
     {
         try {

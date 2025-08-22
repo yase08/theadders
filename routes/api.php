@@ -80,6 +80,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/messages/chats', [MessageController::class, 'getChatList']);
     Route::get('/messages/history', [MessageController::class, 'getChatHistory']);
     Route::post('/messages/status', [MessageController::class, 'updateMessageStatus']);
+    Route::post('/messages/clear-all', [MessageController::class, 'clearAllMessages']);
     Route::post('/messages/client-status', [MessageController::class, 'updateClientStatus']);
 });
 // chat end

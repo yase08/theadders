@@ -357,4 +357,10 @@ class FirebaseService
       return false;
     }
   }
+
+  public function clearAllMessages(): void
+  {
+      $this->database->getReference('chats')->remove();
+      $this->database->getReference('chat_summaries')->remove();
+  }
 }
