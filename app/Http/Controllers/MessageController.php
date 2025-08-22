@@ -61,15 +61,6 @@ class MessageController extends Controller
                 'priority' => 'high'
             ], !$isReceiverActive);
 
-           
-            $this->firebaseService->updateChatSummary(
-                $sender->users_id,
-                $receiver->users_id,
-                $request->exchange_id,
-                $request->message,
-                $message->created_at
-            );
-
             return ApiResponseClass::sendResponse($message, 'success', 201);
         } catch (\Exception $e) {
             return ApiResponseClass::sendResponse(null, 'Failed to send message: ' . $e->getMessage(), 500);
@@ -166,9 +157,9 @@ class MessageController extends Controller
                     $message->id,
                     $message->sender_id,
                     $message->receiver_id,
-                    $request->status
+                    $request->status,
+                    $message->exchange_id
                 );
-
 
                 return ApiResponseClass::sendResponse($message, 'success', 200);
             }
@@ -195,111 +186,108 @@ class MessageController extends Controller
             $currentUserId = auth()->id();
             $search = $request->query('search');
 
+            
             $exchangeList = Exchange::where(function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId)
-                      ->orWhere('to_user_id', $currentUserId);
+                    ->orWhere('to_user_id', $currentUserId);
             })
-           
+        
             ->where(function ($query) {
                 $query->where('status', 'Approve')
-                      ->orWhere(function ($query) {
-                          $query->where('status', 'Completed')
-                                ->where(function ($q) {
-                                   
-                                    $q->whereDoesntHave('ratingsGivenByRequester', function ($ratingQuery) {
-                                        $ratingQuery->whereColumn('rated_user_id', 'trs_exchange.to_user_id');
-                                    })
-                                   
-                                    ->orWhereDoesntHave('ratingsGivenByReceiver', function ($ratingQuery) {
-                                        $ratingQuery->whereColumn('rated_user_id', 'trs_exchange.user_id');
-                                    });
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('status', 'Completed')
+                                ->where(function ($ratingQuery) {
+                                    $ratingQuery->whereDoesntHave('ratingsGivenByRequester')
+                                                ->orWhereDoesntHave('ratingsGivenByReceiver');
                                 });
-                      });
+                    });
             })
+            
             ->with([
-                'requester' => function ($query) {
-                    $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                },
-                'receiver' => function ($query) {
-                    $query->select('users_id', 'fullname', 'avatar', 'email', 'firebase_uid');
-                },
+                'requester:users_id,fullname,avatar,email,firebase_uid',
+                'receiver:users_id,fullname,avatar,email,firebase_uid',
                 'requesterProduct',
                 'receiverProduct'
-                ])
-                ->when($search, function ($query, $search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->whereHas('requester', function ($userQuery) use ($search) {
-                            $userQuery->where('fullname', 'like', '%' . $search . '%');
-                        })
-                        ->orWhereHas('receiver', function ($userQuery) use ($search) {
-                            $userQuery->where('fullname', 'like', '%' . $search . '%');
-                        });
-                    });
-                })
-                ->get();
-
-            $chatList = $exchangeList->map(function ($exchange) use ($currentUserId) {
-                $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
-
-                if (!$otherUser) {
-                    \Log::warning("Other user not found for exchange_id: " . $exchange->exchange_id . " during getChatList for user_id: " . $currentUserId);
-                    return null;
-                }
-
-                $lastMessage = Message::where('exchange_id', $exchange->exchange_id)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                $otherUserFirebaseUid = null;
-                if (isset($otherUser->firebase_uid) && !empty($otherUser->firebase_uid)) {
-                    $otherUserFirebaseUid = (string) $otherUser->firebase_uid;
-                } else {
-                    $otherUserFirebaseUid = (string) $otherUser->users_id;
-                    \Log::warning("Firebase UID not found for otherUser (ID Laravel: {$otherUser->users_id}), falling back to Laravel ID for exchange_id: {$exchange->exchange_id}");
-                }
-
-                $userOutput = [
-                    'firebase_uid' => $otherUserFirebaseUid,
-                    'users_id' => $otherUser->users_id,
-                    'fullname' => $otherUser->fullname,
-                    'avatar' => $otherUser->avatar,
-                    'email' => $otherUser->email
-                ];
-
-               
-               
-                $ratingGiven = \App\Models\UserRating::where('exchange_id', $exchange->exchange_id)
-                    ->where(function ($query) use ($exchange) {
-                       
-                        $query->where(function ($q) use ($exchange) {
-                            $q->where('rater_user_id', $exchange->user_id)
-                              ->where('rated_user_id', $exchange->to_user_id);
-                        })
-                       
-                        ->orWhere(function ($q) use ($exchange) {
-                            $q->where('rater_user_id', $exchange->to_user_id)
-                              ->where('rated_user_id', $exchange->user_id);
-                        });
+            ])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('requester', function ($userQuery) use ($search) {
+                        $userQuery->where('fullname', 'like', '%' . $search . '%');
                     })
-                    ->orderBy('created', 'asc')
-                    ->value('rater_user_id');
+                    ->orWhereHas('receiver', function ($userQuery) use ($search) {
+                        $userQuery->where('fullname', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->get();
+
+            if ($exchangeList->isEmpty()) {
+                return ApiResponseClass::sendResponse([], 'Chat list retrieved successfully', 200);
+            }
+            
+            $exchangeIds = $exchangeList->pluck('exchange_id')->all();
+            $allRatings = \App\Models\UserRating::whereIn('exchange_id', $exchangeIds)
+                ->get()
+                ->keyBy('rater_user_id'); 
+
+            $chatKeys = $exchangeList->map(function ($exchange) use ($currentUserId) {
+                $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
+                if (!$otherUser) return null;
+                return $this->firebaseService->getChatKey($currentUserId, $otherUser->users_id, $exchange->exchange_id);
+            })->filter()->values()->all();
+
+            $firebaseMetadata = $this->firebaseService->getChatsMetadata($chatKeys);
+
+            $chatList = $exchangeList->map(function ($exchange) use ($currentUserId, $firebaseMetadata, $allRatings) {
+                $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
+                if (!$otherUser) return null;
+                
+                $hasRated = $allRatings->has($currentUserId);
+
+                $chatKey = $this->firebaseService->getChatKey($currentUserId, $otherUser->users_id, $exchange->exchange_id);
+                $metadata = $firebaseMetadata[$chatKey] ?? null;
+                
+                $lastMessage = $metadata['last_message'] ?? 'Belum ada pesan';
+                $timestamp = $metadata['last_message_timestamp'] ?? now()->timestamp * 1000;
+                $unreadCount = $metadata['unread_message_count'] ?? 0;
+                if (isset($metadata['sender_id']) && $metadata['sender_id'] == $currentUserId) {
+                    $unreadCount = 0;
+                }
 
                 return [
                     'exchange_id' => $exchange->exchange_id,
-                    'user' => $userOutput,
-                    'last_message' => $lastMessage ? $lastMessage->message : null,
-                    'timestamp' => $lastMessage ? $lastMessage->created_at : null,
+                    'status' => $exchange->status,
+                    'user' => [
+                        'firebase_uid' => (string)($otherUser->firebase_uid ?? $otherUser->users_id),
+                        'users_id'     => $otherUser->users_id,
+                        'fullname'     => $otherUser->fullname,
+                        'avatar'       => $otherUser->avatar,
+                        'email'        => $otherUser->email
+                    ],
+                    'last_message'      => $lastMessage,
+                    'timestamp'         => $timestamp,
                     'requester_product' => $exchange->requesterProduct,
-                    'receiver_product' => $exchange->receiverProduct,
-                    'unread_count' => 0,
-                    'has_rated_other_user' => $ratingGiven,
+                    'receiver_product'  => $exchange->receiverProduct,
+                    'unread_count'      => $unreadCount,
+                    'has_rated'         => $hasRated,
                 ];
-            })->filter()->values();
+            })->filter()->sortByDesc('timestamp')->values();
 
             return ApiResponseClass::sendResponse($chatList, 'Chat list retrieved successfully', 200);
         } catch (\Exception $e) {
             \Log::error('Failed to get chat list: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return ApiResponseClass::sendResponse(null, 'Failed to get chat list: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function getNotifications(): JsonResponse
+    {
+        try {
+            $userId = auth()->user()->users_id;
+            $notifications = \App\Models\Notification::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+            return ApiResponseClass::successResponse('Notifications retrieved successfully', $notifications);
+        } catch (Exception $e) {
+            return ApiResponseClass::throw(false, 'Failed to retrieve notifications', [$e->getMessage()]);
         }
     }
 }

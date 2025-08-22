@@ -9,7 +9,7 @@ use App\Services\FirebaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-// ExchangeController
+
 
 class ExchangeController extends Controller
 {
@@ -47,14 +47,15 @@ class ExchangeController extends Controller
       \Log::info('message: ', ['ini' => "Kamu mendapatkan permintaan exchange baru dari " . auth()->user()->fullname]);
 
       if ($receiver && $receiver->fcm_token && $receiver->id != auth()->id()) {
-        \Log::info('notif terkirim: '); // Log sukses
+        \Log::info('notif terkirim: '); 
         $this->firebaseService->sendNotification(
           $receiver->fcm_token,
           "Exchange Request",
           "You have received a new exchange request from " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
-            'type' => 'exchange_request'
+            'type' => 'exchange_request',
+            'user_id' => $receiver->users_id,
           ]
         );
       }
@@ -90,7 +91,8 @@ class ExchangeController extends Controller
           "Your exchange request has been approved by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
-            'type' => 'exchange_request'
+            'type' => 'exchange_request',
+            'user_id' => $requester->users_id,
           ]
         );
       }
@@ -126,7 +128,8 @@ class ExchangeController extends Controller
           "Your exchange request has been rejected by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->id,
-            'type' => 'exchange_request'
+            'type' => 'exchange_request',
+            'user_id' => $requester->users_id,
           ]
         );
       }
@@ -178,11 +181,11 @@ class ExchangeController extends Controller
     }
   }
 
-  public function getIncomingExchanges(Request $request) // Accept the Request object
+  public function getIncomingExchanges(Request $request) 
   {
     try {
-      $search = $request->query('search'); // Get the search parameter from the request
-      $exchanges = $this->exchangeInterface->getIncomingExchanges($search); // Pass the search parameter
+      $search = $request->query('search'); 
+      $exchanges = $this->exchangeInterface->getIncomingExchanges($search); 
       return response()->json([
         'success' => true,
         'data' => $exchanges,
@@ -222,7 +225,7 @@ class ExchangeController extends Controller
 
       DB::commit();
 
-      // Send notification to other user
+      
       $otherUserId = auth()->id() === $exchange->user_id
         ? $exchange->to_user_id
         : $exchange->user_id;
@@ -236,7 +239,8 @@ class ExchangeController extends Controller
           "The exchange has been completed by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->exchange_id,
-            'type' => 'exchange_completed'
+            'type' => 'exchange_completed',
+            'user_id' => $otherUser->users_id,
           ]
         );
       }
@@ -263,7 +267,7 @@ class ExchangeController extends Controller
 
       DB::commit();
 
-      // Send notification to other user
+      
       $otherUserId = auth()->id() === $exchange->user_id
         ? $exchange->to_user_id
         : $exchange->user_id;
@@ -277,7 +281,8 @@ class ExchangeController extends Controller
           "The exchange has been cancelled by " . auth()->user()->fullname,
           [
             'exchange_id' => $exchange->exchange_id,
-            'type' => 'exchange_cancelled'
+            'type' => 'exchange_cancelled',
+            'user_id' => $otherUser->users_id,
           ]
         );
       }
