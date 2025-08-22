@@ -36,6 +36,16 @@ class FirebaseService
   {
     try {
       $messageRef = $this->storeMessage($data);
+      $messageTimestamp = time() * 1000;
+
+      
+      $this->updateChatSummary(
+        $data['sender']->users_id,
+        $data['receiver']->users_id,
+        $data['message'],
+        $messageTimestamp,
+        $data['exchange_id'] ?? null
+      );
 
       if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
         $shouldSkipNotification = false;
@@ -73,7 +83,7 @@ class FirebaseService
                 ]
               ]
             ]));
-// 
+
           $this->messaging->send($message);
           Log::info('Notification sent for message: ' . ($messageRef->getKey() ?? 'unknown'));
         } else {
@@ -96,7 +106,7 @@ class FirebaseService
    */
   private function storeMessage($data)
   {
-    // Buat chat key yang menyertakan exchange_id untuk menghindari pencampuran pesan
+    
     $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
     $chatRef = $this->database->getReference('chats/' . $chatKey);
 
@@ -106,11 +116,61 @@ class FirebaseService
       'message' => $data['message'],
       'exchange_id' => $data['exchange_id'] ?? null,
       'timestamp' => time() * 1000,
-      'status' => 'sent'
-    ];
+      'status' => 'sent',
+      'sender_data' => [
+          'users_id' => $data['sender']->users_id,
+          'fullname' => $data['sender']->fullname,
+          'avatar' => $data['sender']->avatar ?? null,
+      ],
+      'receiver_data' => [
+          'users_id' => $data['receiver']->users_id,
+          'fullname' => $data['receiver']->fullname,
+          'avatar' => $data['receiver']->avatar ?? null,
+      ],
+    ];  
 
-    // Push returns the new reference
+    
     return $chatRef->push($messageData);
+  }
+
+  /**
+   * Update chat summary information in Firebase
+   *
+   * @param string|int $senderId ID of the sender
+   * @param string|int $receiverId ID of the receiver
+   * @param string $lastMessage The content of the last message
+   * @param int $timestamp Timestamp of the last message
+   * @param string|int|null $exchangeId ID of the exchange (optional)
+   * @return bool Status of success
+   */
+  public function updateChatSummary($senderId, $receiverId, $lastMessage, $timestamp, $exchangeId = null)
+  {
+      try {
+          $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
+          $summaryRef = $this->database->getReference('chat_summaries/' . $chatKey);
+
+          $summaryData = [
+              'last_message' => $lastMessage,
+              'last_message_timestamp' => $timestamp,
+              'sender_id' => $senderId,
+              'receiver_id' => $receiverId,
+              'exchange_id' => $exchangeId,
+          ];
+          
+          $currentSummary = $summaryRef->getValue();
+          $unreadCount = 0;
+          if ($currentSummary && isset($currentSummary['unread_message_count'])) {
+              $unreadCount = $currentSummary['unread_message_count'];
+          }
+          $summaryData['unread_message_count'] = $unreadCount + 1;
+
+          $summaryRef->update($summaryData);
+          Log::info('Chat summary updated for chat: ' . $chatKey);
+          return true;
+      } catch (FirebaseException $e) {
+          Log::error('Firebase update chat summary error: ' . $e->getMessage());
+          return false;
+      }
   }
 
   /**
@@ -126,26 +186,38 @@ class FirebaseService
   public function updateFirebaseMessageStatus($messageId, $senderId, $receiverId, $status, $exchangeId = null)
   {
     try {
-      // Gunakan exchange_id jika tersedia untuk chat key yang lebih spesifik
+      
       $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
       $chatRef = $this->database->getReference('chats/' . $chatKey);
 
-      // Coba cari pesan berdasarkan key yang diketahui terlebih dahulu
+      
       $specificMessageRef = $this->database->getReference('chats/' . $chatKey . '/' . $messageId);
       $specificMessage = $specificMessageRef->getValue();
 
       if ($specificMessage) {
-        // Pesan ditemukan dengan ID yang tepat, update langsung
+        
         $specificMessageRef->update(['status' => $status]);
+
+        
+        if ($status === 'read') {
+            $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
+            $summaryRef = $this->database->getReference('chat_summaries/' . $chatKey);
+            $currentSummary = $summaryRef->getValue();
+            if ($currentSummary && isset($currentSummary['unread_message_count']) && $currentSummary['unread_message_count'] > 0) {
+                $summaryRef->update(['unread_message_count' => $currentSummary['unread_message_count'] - 1]);
+                Log::info('Unread message count decremented for chat: ' . $chatKey);
+            }
+        }
+
         Log::info("Message $messageId status updated to $status directly");
         return true;
       }
 
-      // Jika tidak ditemukan, cari melalui semua pesan (fallback)
+      
       $messages = $chatRef->getValue();
       if ($messages) {
         foreach ($messages as $key => $msg) {
-          // Cari berdasarkan ID atau kombinasi sender/receiver/message
+          
           if (($msg['message_id'] ?? null) == $messageId ||
             ($msg['sender_id'] == $senderId &&
               $msg['receiver_id'] == $receiverId &&
@@ -178,12 +250,12 @@ class FirebaseService
    */
   private function getChatKey($userId1, $userId2, $exchangeId = null)
   {
-    // Create consistent chat key
+    
     $ids = [(string)$userId1, (string)$userId2];
     sort($ids);
     $baseKey = implode('_', $ids);
 
-    // Tambahkan exchange_id jika tersedia
+    
     if ($exchangeId) {
       return $baseKey . '_exchange_' . $exchangeId;
     }
@@ -238,24 +310,24 @@ class FirebaseService
   public function isUserActiveInChat($userId, $otherUserId, $exchangeId = null)
   {
     try {
-      // Dapatkan status user dari node 'user_status' di Firebase
+      
       $userStatusRef = $this->database->getReference('user_status/' . $userId);
       $userStatus = $userStatusRef->getValue();
 
       if (!$userStatus) {
-        return false; // User tidak aktif sama sekali
+        return false; 
       }
 
-      // Cek apakah user sedang aktif di chat dengan pengguna tertentu
+      
       if (!empty($userStatus['active_chat'])) {
         $activeChat = $userStatus['active_chat'];
 
-        // Jika exchange_id disediakan, cek juga exchange_id
+        
         if ($exchangeId) {
           return $activeChat['user_id'] == $otherUserId && $activeChat['exchange_id'] == $exchangeId;
         }
 
-        // Jika tidak, cek hanya user_id
+        
         return $activeChat['user_id'] == $otherUserId;
       }
 
