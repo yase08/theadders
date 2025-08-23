@@ -101,7 +101,7 @@ class FirebaseService
         }
     }
 
-    public function createChatRoom(Exchange $exchange)
+    public function createChatRoom(\App\Models\Exchange $exchange)
     {
         try {
             
