@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Interfaces\ExchangeInterface;
 use App\Models\Exchange;
 use App\Models\Product;
+use App\Services\FirebaseService;
 
 class ExchangeRepository implements ExchangeInterface
 {
