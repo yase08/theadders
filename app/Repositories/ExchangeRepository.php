@@ -8,6 +8,13 @@ use App\Models\Product;
 
 class ExchangeRepository implements ExchangeInterface
 {
+  protected $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
   public function requestExchange(array $data)
   {
     try {
@@ -88,22 +95,22 @@ class ExchangeRepository implements ExchangeInterface
 
   public function approveExchange(int $exchangeId)
   {
-    try {
-      $exchange = Exchange::findOrFail($exchangeId);
+      try {
+          $exchange = Exchange::findOrFail($exchangeId);
 
+          if ($exchange->to_user_id !== auth()->id()) {
+              throw new \Exception('Unauthorized action.', 403);
+          }
 
-      if ($exchange->to_user_id !== auth()->id()) {
-        throw new \Exception('Unauthorized action.', 403);
+          $exchange->update(['status' => 'Approve']);
+
+          $this->firebaseService->createChatRoom($exchange);
+
+          return $exchange;
+      } catch (\Exception $e) {
+          throw new \Exception('Unable to approve exchange: ' . $e->getMessage());
       }
-
-      $exchange->update(['status' => 'Approve']);
-
-      return $exchange;
-    } catch (\Exception $e) {
-      throw new \Exception('Unable to approve exchange: ' . $e->getMessage());
-    }
   }
-
 
   public function declineExchange(int $exchangeId)
   {
@@ -152,20 +159,23 @@ class ExchangeRepository implements ExchangeInterface
     }
   }
 
-  public function getIncomingExchanges($search = null) // Added $search parameter
+  public function getIncomingExchanges($search = null)
   {
     try {
       $userId = auth()->id();
 
       $exchanges = Exchange::where('to_user_id', $userId)
         ->where('status', 'Submission')
-        ->with([
-          'requesterProduct.ratings',
-          'receiverProduct.ratings',
-          'requester',
-          'receiver'
-        ])
-        // Add search filter
+            ->with([
+                'requesterProduct' => function ($query) {
+                    $query->withCount('ratings')->withAvg('ratings', 'rating');
+                },
+                'receiverProduct' => function ($query) {
+                    $query->withCount('ratings')->withAvg('ratings', 'rating');
+                },
+                'requester',
+                'receiver'
+            ])
         ->when($search, function ($query, $search) {
             $query->where(function ($query) use ($search) {
                 $query->whereHas('requesterProduct', function ($q) use ($search) {
@@ -178,23 +188,6 @@ class ExchangeRepository implements ExchangeInterface
         })
         ->orderBy('created', 'desc')
         ->get();
-
-      // Calculate ratings for each product
-      $exchanges->each(function ($exchange) {
-          // Calculate requester product ratings if exists
-          if ($exchange->requesterProduct) {
-              $requesterRatings = $exchange->requesterProduct->ratings()->get();
-              $exchange->requesterProduct->average_rating = round($requesterRatings->avg('rating'), 1) ?? 0;
-              $exchange->requesterProduct->total_ratings = $requesterRatings->count();
-          }
-
-          // Calculate receiver product ratings if exists
-          if ($exchange->receiverProduct) {
-              $receiverRatings = $exchange->receiverProduct->ratings()->get();
-              $exchange->receiverProduct->average_rating = round($receiverRatings->avg('rating'), 1) ?? 0;
-              $exchange->receiverProduct->total_ratings = $receiverRatings->count();
-          }
-      });
 
       return $exchanges;
     } catch (\Exception $e) {

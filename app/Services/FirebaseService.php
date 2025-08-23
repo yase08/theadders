@@ -101,6 +101,65 @@ class FirebaseService
         }
     }
 
+    public function createChatRoom(Exchange $exchange)
+    {
+        try {
+            
+            $exchange->load(['requester', 'receiver', 'requesterProduct', 'receiverProduct']);
+
+            $requester = $exchange->requester;
+            $receiver = $exchange->receiver;
+            $chatKey = $this->getChatKey($requester->users_id, $receiver->users_id, $exchange->exchange_id);
+            
+            
+            $roomDataForRequester = [
+                'exchange_id'       => $exchange->exchange_id,
+                'status'            => 'Approve',
+                'user'              => [
+                    'users_id'  => $receiver->users_id,
+                    'fullname'  => $receiver->fullname,
+                    'avatar'    => $receiver->avatar,
+                ],
+                'last_message'      => 'Belum ada pesan',
+                'timestamp'         => now()->timestamp * 1000,
+                'unread_count'      => 0,
+                'has_rated'         => false,
+                'requester_product' => $exchange->requesterProduct,
+                'receiver_product'  => $exchange->receiverProduct,
+            ];
+
+            
+            $roomDataForReceiver = [
+                'exchange_id'       => $exchange->exchange_id,
+                'status'            => 'Approve',
+                'user'              => [
+                    'users_id'  => $requester->users_id,
+                    'fullname'  => $requester->fullname,
+                    'avatar'    => $requester->avatar,
+                ],
+                'last_message'      => 'Belum ada pesan',
+                'timestamp'         => now()->timestamp * 1000,
+                'unread_count'      => 0,
+                'has_rated'         => false,
+                'requester_product' => $exchange->requesterProduct,
+                'receiver_product'  => $exchange->receiverProduct,
+            ];
+
+            
+            $updates = [
+                'chat_rooms/' . $requester->users_id . '/' . $chatKey => $roomDataForRequester,
+                'chat_rooms/' . $receiver->users_id . '/' . $chatKey  => $roomDataForReceiver,
+            ];
+
+            $this->database->getReference()->update($updates);
+            Log::info('Chat room created in Firebase for exchange: ' . $exchange->exchange_id);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create chat room in Firebase: ' . $e->getMessage());
+        }
+    }
+
+
     private function storeMessage($data)
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);

@@ -226,10 +226,11 @@ class MessageController extends Controller
             }
             
             $exchangeIds = $exchangeList->pluck('exchange_id')->all();
-            $allRatings = \App\Models\UserRating::whereIn('exchange_id', $exchangeIds)
-                ->get()
-                ->keyBy('rater_user_id'); 
-
+            $ratingsFromCurrentUser = \App\Models\UserRating::whereIn('exchange_id', $exchangeIds)
+                ->where('rater_user_id', $currentUserId)
+                ->pluck('exchange_id')
+                ->flip();
+            
             $chatKeys = $exchangeList->map(function ($exchange) use ($currentUserId) {
                 $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
                 if (!$otherUser) return null;
@@ -242,7 +243,7 @@ class MessageController extends Controller
                 $otherUser = $exchange->user_id == $currentUserId ? $exchange->receiver : $exchange->requester;
                 if (!$otherUser) return null;
                 
-                $hasRated = $allRatings->has($currentUserId);
+                $hasRated = isset($ratingsFromCurrentUser[$exchange->exchange_id]);
 
                 $chatKey = $this->firebaseService->getChatKey($currentUserId, $otherUser->users_id, $exchange->exchange_id);
                 $metadata = $firebaseMetadata[$chatKey] ?? null;
