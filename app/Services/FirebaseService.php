@@ -12,6 +12,7 @@ use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\WebPushConfig;
 use Kreait\Firebase\Database\Transaction;
+use Kreait\Firebase\Value\ServerValue;
 
 class FirebaseService
 {
@@ -192,37 +193,34 @@ class FirebaseService
 
     private function updateChatMetadata($data)
     {
-        $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
-        $metadataRef = $this->database->getReference('chats/' . $chatKey . '/metadata');
+        $senderId = $data['sender']->users_id;
+        $receiverId = $data['receiver']->users_id;
+        $exchangeId = $data['exchange_id'] ?? null;
+        $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
         
-        $this->database->runTransaction(function (Transaction $transaction) use ($metadataRef, $data) {
-            $currentData = $transaction->snapshot($metadataRef)->getValue();
+        $timestamp = ServerValue::TIMESTAMP;
 
-            $unreadCount = ($currentData['unread_message_count'] ?? 0) + 1;
+        $updates = [
+            'chats/' . $chatKey . '/metadata/last_message' => $data['message'],
+            'chats/' . $chatKey . '/metadata/last_message_timestamp' => $timestamp,
+            'chats/' . $chatKey . '/metadata/sender_id' => $senderId,
+            'chats/' . $chatKey . '/metadata/unread_message_count' => ServerValue::increment(1),
 
-            $newData = [
-                'last_message' => $data['message'],
-                'last_message_timestamp' => time() * 1000,
-                'sender_id' => $data['sender']->users_id,
-                'receiver_id' => $data['receiver']->users_id,
-                'exchange_id' => $data['exchange_id'] ?? null,
-                'unread_message_count' => $unreadCount,
-                'participants' => [
-                    (string)$data['sender']->users_id => [
-                        'fullname' => $data['sender']->fullname,
-                        'avatar' => $data['sender']->avatar ?? null,
-                    ],
-                    (string)$data['receiver']->users_id => [
-                        'fullname' => $data['receiver']->fullname,
-                        'avatar' => $data['receiver']->avatar ?? null,
-                    ]
-                ]
-            ];
-            
-            $transaction->set($metadataRef, $newData);
-        });
-        
-        Log::info('Chat metadata updated for chat: ' . $chatKey);
+            'chat_rooms/' . $senderId . '/' . $chatKey . '/last_message' => $data['message'],
+            'chat_rooms/' . $senderId . '/' . $chatKey . '/timestamp' => $timestamp,
+            'chat_rooms/' . $senderId . '/' . $chatKey . '/unread_count' => 0, 
+
+            'chat_rooms/' . $receiverId . '/' . $chatKey . '/last_message' => $data['message'],
+            'chat_rooms/' . $receiverId . '/' . $chatKey . '/timestamp' => $timestamp,
+            'chat_rooms/' . $receiverId . '/' . $chatKey . '/unread_count' => ServerValue::increment(1),
+        ];
+
+        try {
+            $this->database->getReference()->update($updates);
+            Log::info('Chat metadata and chat rooms updated for chat: ' . $chatKey);
+        } catch (\Exception $e) {
+            Log::error('Failed to perform multi-path update for chat metadata: ' . $e->getMessage());
+        }
     }
 
     public function updateFirebaseMessageStatus($messageId, $senderId, $receiverId, $status, $exchangeId = null)
