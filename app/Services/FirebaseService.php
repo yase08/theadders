@@ -189,22 +189,24 @@ class FirebaseService
         return $messagesRef->push($messageData);
     }
 
+
     private function updateChatMetadata($data)
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
         $metadataRef = $this->database->getReference('chats/' . $chatKey . '/metadata');
         
-        $metadataRef->runTransaction(function (&$currentData) use ($data) {
+        $this->database->runTransaction(function (Transaction $transaction) use ($metadataRef, $data) {
+            $currentData = $transaction->snapshot($metadataRef)->getValue();
+
             $unreadCount = ($currentData['unread_message_count'] ?? 0) + 1;
 
-            $currentData = [
+            $newData = [
                 'last_message' => $data['message'],
                 'last_message_timestamp' => time() * 1000,
                 'sender_id' => $data['sender']->users_id,
                 'receiver_id' => $data['receiver']->users_id,
                 'exchange_id' => $data['exchange_id'] ?? null,
                 'unread_message_count' => $unreadCount,
-               
                 'participants' => [
                     (string)$data['sender']->users_id => [
                         'fullname' => $data['sender']->fullname,
@@ -217,7 +219,7 @@ class FirebaseService
                 ]
             ];
             
-            return $currentData;
+            $transaction->set($metadataRef, $newData);
         });
         
         Log::info('Chat metadata updated for chat: ' . $chatKey);
@@ -228,7 +230,6 @@ class FirebaseService
         try {
             $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
             
-           
             $specificMessageRef = $this->database->getReference('chats/' . $chatKey . '/messages/' . $messageId);
             $specificMessage = $specificMessageRef->getValue();
 
@@ -236,15 +237,17 @@ class FirebaseService
                 $specificMessageRef->update(['status' => $status]);
 
                 if ($status === 'read') {
-                   
                     $metadataRef = $this->database->getReference('chats/' . $chatKey . '/metadata');
-                    $metadataRef->runTransaction(function(&$currentData) {
+                    
+                    $this->database->runTransaction(function (Transaction $transaction) use ($metadataRef) {
+                        $currentData = $transaction->snapshot($metadataRef)->getValue();
+
                         if ($currentData && isset($currentData['unread_message_count']) && $currentData['unread_message_count'] > 0) {
-                            
                             $currentData['unread_message_count'] = 0;
+                            $transaction->set($metadataRef, $currentData);
                         }
-                        return $currentData;
                     });
+
                     Log::info('Unread message count reset for chat: ' . $chatKey);
                 }
 
