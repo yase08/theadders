@@ -60,6 +60,10 @@ class ExchangeController extends Controller
         );
       }
 
+      if ($receiver) {
+        $this->firebaseService->incrementNewExchangeCount($receiver->users_id);
+      }
+
       return response()->json([
         'message' => 'success',
         'exchange' => $exchange
@@ -72,6 +76,23 @@ class ExchangeController extends Controller
       ], 500);
     }
   }
+
+  public function readIncomingExchanges()
+  {
+    try {
+      $this->firebaseService->resetNewExchangeCount(auth()->id());
+
+      return response()->json([
+        'message' => 'success',
+      ], 200);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'error',
+        'error' => $th->getMessage()
+      ], 500);
+    }
+  }
+
 
   public function approveExchange(int $exchangeId)
   {

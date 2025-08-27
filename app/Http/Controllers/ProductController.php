@@ -26,12 +26,12 @@ class ProductController extends Controller
 
             $validatedData = $request->validated();
 
-            // Handle thumbnail upload
+            
             if ($request->hasFile('thumbail')) {
                 $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
             }
 
-            // Handle multiple product images
+            
             if ($request->hasFile('product_images')) {
                 $productImages = [];
                 foreach ($request->file('product_images') as $image) {
@@ -42,6 +42,8 @@ class ProductController extends Controller
             }
 
             $product = $this->productCategoryInterface->storeProduct($validatedData);
+
+            $this->firebaseService->updateLatestProductTimestamp();
 
             DB::commit();
             return response()->json([
@@ -108,6 +110,12 @@ class ProductController extends Controller
         }
     }
 
+    public function readNewProducts()
+    {
+        $this->firebaseService->clearNewProductStatus(auth()->id());
+        return response()->json(['message' => 'success'], 200);
+    }
+
     public function tradeHistory(TradeRequest $request)
     {
         try {
@@ -157,14 +165,14 @@ class ProductController extends Controller
 
             $validatedData = $request->validated();
 
-            // Only include thumbail if file is present
+            
             if ($request->hasFile('thumbail')) {
                 $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
             } elseif (!isset($validatedData['thumbail'])) {
                 unset($validatedData['thumbail']);
             }
 
-            // Only include product_images if files are present
+            
             if ($request->hasFile('product_images')) {
                 $productImages = [];
                 foreach ($request->file('product_images') as $image) {

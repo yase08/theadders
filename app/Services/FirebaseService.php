@@ -27,6 +27,55 @@ class FirebaseService
         $this->database = $factory->createDatabase();
     }
 
+    public function updateLatestProductTimestamp(): void
+    {
+        try {
+            $this->database
+                ->getReference('global_stats/latest_product_timestamp')
+                ->set(ServerValue::TIMESTAMP);
+            Log::info('Updated latest_product_timestamp.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update latest_product_timestamp: ' . $e->getMessage());
+        }
+    }
+
+    public function clearNewProductStatus(int $userId): void
+    {
+        try {
+            $this->database
+                ->getReference('user_notifications/' . $userId . '/last_cleared_products_timestamp')
+                ->set(ServerValue::TIMESTAMP);
+            Log::info('Updated last_cleared_products_timestamp for user: ' . $userId);
+        } catch (\Exception $e) {
+            Log::error('Failed to update last_cleared_products_timestamp for user ' . $userId . ': ' . $e->getMessage());
+        }
+    }
+
+    public function incrementNewExchangeCount(int $userId): void
+    {
+        try {
+            $this->database
+                ->getReference('user_notifications/' . $userId . '/new_exchange_requests')
+                ->set(ServerValue::increment(1));
+            Log::info('Incremented new exchange request count for user: ' . $userId);
+        } catch (\Exception $e) {
+            Log::error('Failed to increment new exchange request count for user ' . $userId . ': ' . $e->getMessage());
+        }
+    }
+
+    public function resetNewExchangeCount(int $userId): void
+    {
+        try {
+            $this->database
+                ->getReference('user_notifications/' . $userId . '/new_exchange_requests')
+                ->set(0);
+            Log::info('Reset new exchange request count for user: ' . $userId);
+        } catch (\Exception $e) {
+            Log::error('Failed to reset new exchange request count for user ' . $userId . ': ' . $e->getMessage());
+        }
+    }
+
+
     public function sendMessage($data, $shouldSendNotification = true)
     {
         try {
