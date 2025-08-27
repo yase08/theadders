@@ -8,14 +8,19 @@ use App\Http\Requests\ProductIndexRequest;
 use App\Interfaces\ProductCategoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\FirebaseService;
+
 use App\Http\Requests\TradeRequest;
 
 class ProductController extends Controller
 {
     private ProductCategoryInterface $productCategoryInterface;
+    protected $firebaseService;
 
-    public function __construct(ProductCategoryInterface $productCategoryInterface)
+
+    public function __construct(ProductCategoryInterface $productCategoryInterface, FirebaseService $firebaseService)
     {
+        $this->firebaseService = $firebaseService;
         $this->productCategoryInterface = $productCategoryInterface;
     }
 
