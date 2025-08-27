@@ -6,13 +6,12 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Kreait\Firebase\Exception\MessagingException;
-use Kreait\Firebase\Exception\FirebaseException;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\WebPushConfig;
 use Kreait\Firebase\Database\Transaction;
-use Kreait\Firebase\Value\ServerValue;
+use Kreait\Firebase\Database;
 
 class FirebaseService
 {
@@ -32,7 +31,7 @@ class FirebaseService
         try {
             $this->database
                 ->getReference('global_stats/latest_product_timestamp')
-                ->set(ServerValue::TIMESTAMP);
+                ->set(Database::SERVER_TIMESTAMP);
             Log::info('Updated latest_product_timestamp.');
         } catch (\Exception $e) {
             Log::error('Failed to update latest_product_timestamp: ' . $e->getMessage());
@@ -44,7 +43,7 @@ class FirebaseService
         try {
             $this->database
                 ->getReference('user_notifications/' . $userId . '/last_cleared_products_timestamp')
-                ->set(ServerValue::TIMESTAMP);
+                ->set(Database::SERVER_TIMESTAMP);
             Log::info('Updated last_cleared_products_timestamp for user: ' . $userId);
         } catch (\Exception $e) {
             Log::error('Failed to update last_cleared_products_timestamp for user ' . $userId . ': ' . $e->getMessage());
@@ -56,7 +55,9 @@ class FirebaseService
         try {
             $this->database
                 ->getReference('user_notifications/' . $userId . '/new_exchange_requests')
-                ->set(ServerValue::increment(1));
+                ->set([
+                    '.sv' => ['increment' => 1]
+                ]);
             Log::info('Incremented new exchange request count for user: ' . $userId);
         } catch (\Exception $e) {
             Log::error('Failed to increment new exchange request count for user ' . $userId . ': ' . $e->getMessage());
@@ -79,10 +80,10 @@ class FirebaseService
     public function sendMessage($data, $shouldSendNotification = true)
     {
         try {
-           
+
             $messageRef = $this->storeMessage($data);
-            
-           
+
+
             $this->updateChatMetadata($data);
 
             if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
@@ -154,14 +155,14 @@ class FirebaseService
     public function createChatRoom(\App\Models\Exchange $exchange)
     {
         try {
-            
+
             $exchange->load(['requester', 'receiver', 'requesterProduct', 'receiverProduct']);
 
             $requester = $exchange->requester;
             $receiver = $exchange->receiver;
             $chatKey = $this->getChatKey($requester->users_id, $receiver->users_id, $exchange->exchange_id);
-            
-            
+
+
             $roomDataForRequester = [
                 'exchange_id'       => $exchange->exchange_id,
                 'status'            => 'Approve',
@@ -178,7 +179,7 @@ class FirebaseService
                 'receiver_product'  => $exchange->receiverProduct,
             ];
 
-            
+
             $roomDataForReceiver = [
                 'exchange_id'       => $exchange->exchange_id,
                 'status'            => 'Approve',
@@ -195,7 +196,7 @@ class FirebaseService
                 'receiver_product'  => $exchange->receiverProduct,
             ];
 
-            
+
             $updates = [
                 'chat_rooms/' . $requester->users_id . '/' . $chatKey => $roomDataForRequester,
                 'chat_rooms/' . $receiver->users_id . '/' . $chatKey  => $roomDataForReceiver,
@@ -203,7 +204,6 @@ class FirebaseService
 
             $this->database->getReference()->update($updates);
             Log::info('Chat room created in Firebase for exchange: ' . $exchange->exchange_id);
-
         } catch (\Exception $e) {
             Log::error('Failed to create chat room in Firebase: ' . $e->getMessage());
         }
@@ -213,7 +213,7 @@ class FirebaseService
     private function storeMessage($data)
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
-       
+
         $messagesRef = $this->database->getReference('chats/' . $chatKey . '/messages');
 
         $messageData = [
@@ -223,7 +223,7 @@ class FirebaseService
             'exchange_id' => $data['exchange_id'] ?? null,
             'timestamp' => time() * 1000,
             'status' => 'sent',
-           
+
             'sender_data' => [
                 'users_id' => $data['sender']->users_id,
                 'fullname' => $data['sender']->fullname,
@@ -246,22 +246,22 @@ class FirebaseService
         $receiverId = $data['receiver']->users_id;
         $exchangeId = $data['exchange_id'] ?? null;
         $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
-        
-        $timestamp = ServerValue::TIMESTAMP;
+
+        $timestamp = Database::SERVER_TIMESTAMP;
 
         $updates = [
             'chats/' . $chatKey . '/metadata/last_message' => $data['message'],
             'chats/' . $chatKey . '/metadata/last_message_timestamp' => $timestamp,
             'chats/' . $chatKey . '/metadata/sender_id' => $senderId,
-            'chats/' . $chatKey . '/metadata/unread_message_count' => ServerValue::increment(1),
+            'chats/' . $chatKey . '/metadata/unread_message_count' => ['.sv' => ['increment' => 1]],
 
             'chat_rooms/' . $senderId . '/' . $chatKey . '/last_message' => $data['message'],
             'chat_rooms/' . $senderId . '/' . $chatKey . '/timestamp' => $timestamp,
-            'chat_rooms/' . $senderId . '/' . $chatKey . '/unread_count' => 0, 
+            'chat_rooms/' . $senderId . '/' . $chatKey . '/unread_count' => 0,
 
             'chat_rooms/' . $receiverId . '/' . $chatKey . '/last_message' => $data['message'],
             'chat_rooms/' . $receiverId . '/' . $chatKey . '/timestamp' => $timestamp,
-            'chat_rooms/' . $receiverId . '/' . $chatKey . '/unread_count' => ServerValue::increment(1),
+            'chat_rooms/' . $receiverId . '/' . $chatKey . '/unread_count' => ['.sv' => ['increment' => 1]],
         ];
 
         try {
@@ -276,7 +276,7 @@ class FirebaseService
     {
         try {
             $chatKey = $this->getChatKey($senderId, $receiverId, $exchangeId);
-            
+
             $specificMessageRef = $this->database->getReference('chats/' . $chatKey . '/messages/' . $messageId);
             $specificMessage = $specificMessageRef->getValue();
 
@@ -285,7 +285,7 @@ class FirebaseService
 
                 if ($status === 'read') {
                     $metadataRef = $this->database->getReference('chats/' . $chatKey . '/metadata');
-                    
+
                     $this->database->runTransaction(function (Transaction $transaction) use ($metadataRef) {
                         $currentData = $transaction->snapshot($metadataRef)->getValue();
 
@@ -361,24 +361,23 @@ class FirebaseService
             return [];
         }
 
-        $references = [];
+        $results = [];
+
         foreach ($chatKeys as $key) {
-            $references[$key] = $this->database->getReference('chats/' . $key . '/metadata');
-        }
+            try {
+                $value = $this->database
+                    ->getReference('chats/' . $key . '/metadata')
+                    ->getValue();
 
-        try {
-            $snapshot = $this->database->fetch($references);
-            $results = [];
-            foreach ($snapshot as $key => $value) {
                 $results[$key] = $value;
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch metadata for chat key {$key}: " . $e->getMessage());
+                $results[$key] = null;
             }
-            return $results;
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch multiple chat metadata: ' . $e->getMessage());
-            return [];
         }
-    }
 
+        return $results;
+    }
 
     public function saveNotification(int $userId, string $title, string $body, array $data = []): void
     {
@@ -411,7 +410,7 @@ class FirebaseService
                 if ($exchangeId) {
                     return $activeChat['user_id'] == $otherUserId && $activeChat['exchange_id'] == $exchangeId;
                 }
-                
+
                 return $activeChat['user_id'] == $otherUserId;
             }
 
