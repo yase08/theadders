@@ -202,6 +202,8 @@ class FirebaseService
                 'chat_rooms/' . $receiver->users_id . '/' . $chatKey  => $roomDataForReceiver,
             ];
 
+            Log::debug('Firebase updates: ', $updates);
+
             $this->database->getReference()->update($updates);
             Log::info('Chat room created in Firebase for exchange: ' . $exchange->exchange_id);
         } catch (\Exception $e) {

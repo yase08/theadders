@@ -49,6 +49,7 @@ Route::get('/category-subs', [CategorySubController::class, 'index']);
 
 // product start
 Route::middleware(JwtMiddleware::class)->group(function () {
+    Route::post('/products/read-new', [ProductController::class, 'readNewProducts']);
     Route::post('/product', [ProductController::class, 'storeProduct']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/my-products', [ProductController::class, 'myProducts']);
@@ -56,12 +57,12 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/my-trade-history', [ProductController::class, 'tradeHistory']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::post('/products/{id}', [ProductController::class, 'update']);
-    Route::post('/products/read-new', [ProductController::class, 'readNewProducts']);
 });
 // product end
 
 // exchange start
 Route::middleware(JwtMiddleware::class)->group(function () {
+    Route::post('/exchanges/read-incoming', [ExchangeController::class, 'readIncomingExchanges']);
     Route::post('/exchange', [ExchangeController::class, 'requestExchange']);
     Route::put('/approve-exchange/{exchange_id}', [ExchangeController::class, 'approveExchange']);
     Route::put('/decline-exchange/{exchange_id}', [ExchangeController::class, 'declineExchange']);
@@ -72,7 +73,6 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/exchange/{exchangeId}/complete', [ExchangeController::class, 'completeExchange']);
     Route::post('/exchange/{exchangeId}/cancel', [ExchangeController::class, 'cancelExchange']);
     Route::get('/exchange/product/{productId}', [ExchangeController::class, 'getProductExchangeRequests']);
-    Route::post('/exchanges/read-incoming', [ExchangeController::class, 'readIncomingExchanges']);
 });
 // exchange end
 
