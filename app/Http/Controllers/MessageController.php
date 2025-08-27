@@ -23,7 +23,8 @@ class MessageController extends Controller
         $request->validate([
             'receiver_id' => 'required|exists:users,users_id',
             'message' => 'required|string',
-            'exchange_id' => 'required|exists:trs_exchange,exchange_id'
+            'exchange_id' => 'required|exists:trs_exchange,exchange_id',
+            'message_id' => 'required|string',
         ]);
 
         try {
@@ -58,7 +59,8 @@ class MessageController extends Controller
                 'exchange_id' => $request->exchange_id,
                 'client_status' => $isReceiverActive ? 'chat_open' : 'chat_closed',
                 'room_id' => $request->exchange_id,
-                'priority' => 'high'
+                'priority' => 'high',
+                'message_id' => $request->message_id,
             ], !$isReceiverActive);
 
             return ApiResponseClass::sendResponse($message, 'success', 201);

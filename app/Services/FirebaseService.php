@@ -81,8 +81,7 @@ class FirebaseService
     {
         try {
 
-            $messageRef = $this->storeMessage($data);
-
+            // $messageRef = $this->storeMessage($data);
 
             $this->updateChatMetadata($data);
 
@@ -104,7 +103,7 @@ class FirebaseService
                         ->withData([
                             'exchange_id' => $data['exchange_id'] ?? '',
                             'sender_id' => (string)$data['sender']->users_id,
-                            'message_id' => $messageRef->getKey() ?? '',
+                            'message_id' => $data['message_id'] ?? '',
                             'type' => 'chat_message',
                             'room_id' => $data['room_id'] ?? '',
                             'priority' => $data['priority'] ?? 'normal',
@@ -132,7 +131,7 @@ class FirebaseService
                         [
                             'exchange_id' => $data['exchange_id'] ?? '',
                             'sender_id' => (string)$data['sender']->users_id,
-                            'message_id' => $messageRef->getKey() ?? '',
+                            'message_id' => $data['message_id'] ?? '',
                             'type' => 'chat_message',
                             'room_id' => $data['room_id'] ?? '',
                             'priority' => $data['priority'] ?? 'normal',
