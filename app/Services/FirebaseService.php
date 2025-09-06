@@ -235,7 +235,7 @@ class FirebaseService
     }
 
 
-    private function storeMessage($data)
+    public function storeMessage($data)
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
 
@@ -265,7 +265,7 @@ class FirebaseService
     }
 
 
-    private function updateChatMetadata($data)
+    public function updateChatMetadata($data)
     {
         $senderId = $data['sender']->users_id;
         $receiverId = $data['receiver']->users_id;
@@ -336,7 +336,7 @@ class FirebaseService
     }
 
 
-    private function getChatKey($userId1, $userId2, $exchangeId = null)
+    public function getChatKey($userId1, $userId2, $exchangeId = null)
     {
         $ids = [(string)$userId1, (string)$userId2];
         sort($ids);
