@@ -197,7 +197,7 @@ class FirebaseService
                 'last_message'      => 'Belum ada pesan',
                 'timestamp'         => now()->timestamp * 1000,
                 'unread_count'      => 0,
-                'has_rated'         => false,
+                'has_rated'         => null,
                 'requester_product' => $exchange->requesterProduct,
                 'receiver_product'  => $exchange->receiverProduct,
             ];
@@ -214,7 +214,7 @@ class FirebaseService
                 'last_message'      => 'Belum ada pesan',
                 'timestamp'         => now()->timestamp * 1000,
                 'unread_count'      => 0,
-                'has_rated'         => false,
+                'has_rated'         => null,
                 'requester_product' => $exchange->requesterProduct,
                 'receiver_product'  => $exchange->receiverProduct,
             ];
@@ -234,6 +234,19 @@ class FirebaseService
         }
     }
 
+    public function updateChatRoomRatingStatus(int $raterId, int $ratedId, string $chatKey): void
+    {
+        try {
+            $updates = [
+                'chat_rooms/' . $raterId . '/' . $chatKey . '/has_rated' => true,
+                'chat_rooms/' . $ratedId . '/' . $chatKey . '/has_rated' => false,
+            ];
+            $this->database->getReference()->update($updates);
+            Log::info("Updated has_rated for rater {$raterId} (true) and rated {$ratedId} (false) in chat {$chatKey}");
+        } catch (\Exception $e) {
+            Log::error("Failed to update chat room rating status: " . $e->getMessage());
+        }
+    }
 
     public function storeMessage($data)
     {

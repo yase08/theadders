@@ -67,7 +67,7 @@ class RatingRepository implements RatingInterface
 
             $chatKey = $this->firebaseService->getChatKey($raterUserId, $ratedUserId, $exchange->exchange_id);
 
-            $this->firebaseService->updateHasRatedStatus($raterUserId, $chatKey);
+            $this->firebaseService->updateChatRoomRatingStatus($raterUserId, $ratedUserId, $chatKey);
 
             $otherUserHasRated = UserRating::where('rater_user_id', $ratedUserId)
                 ->where('rated_user_id', $raterUserId)
