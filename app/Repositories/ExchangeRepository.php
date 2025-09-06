@@ -264,6 +264,17 @@ class ExchangeRepository implements ExchangeInterface
         'completed_at' => now()
       ]);
 
+      $chatKey = $this->firebaseService->getChatKey(
+        $exchange->user_id,
+        $exchange->to_user_id,
+        $exchange->exchange_id
+      );
+      $this->firebaseService->removeChatRoom(
+        $exchange->user_id,
+        $exchange->to_user_id,
+        $chatKey
+      );
+
       return $exchange->fresh(['requesterProduct', 'receiverProduct']);
     } catch (\Exception $e) {
       throw new \Exception('Unable to cancel exchange: ' . $e->getMessage());

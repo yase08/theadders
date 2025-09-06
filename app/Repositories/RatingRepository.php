@@ -5,13 +5,21 @@ namespace App\Repositories;
 use App\Interfaces\RatingInterface;
 use App\Models\UserRating;
 use App\Models\Exchange;
+use App\Services\FirebaseService;
 
 class RatingRepository implements RatingInterface
 {
+    protected $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
     public function rateExchangeUser(array $data)
     {
         try {
-            // Verify exchange completion
+
             $exchange = Exchange::where('exchange_id', $data['exchange_id'])->first();
 
             if (!$exchange) {
@@ -22,26 +30,21 @@ class RatingRepository implements RatingInterface
                 throw new \Exception('Exchange must be completed to be rated.');
             }
 
-            // Verify user is part of the exchange
             $raterUserId = auth()->id();
             if ($raterUserId !== $exchange->user_id && $raterUserId !== $exchange->to_user_id) {
                 throw new \Exception('Unauthorized to rate this exchange');
             }
 
-            // Determine which user to rate
             $ratedUserId = $data['rated_user_id'];
-            
-            // Verify the rated user is part of the exchange
+
             if ($ratedUserId != $exchange->user_id && $ratedUserId != $exchange->to_user_id) {
                 throw new \Exception('Invalid user for this exchange');
             }
 
-            // Verify user is not rating themselves
             if ($raterUserId === $ratedUserId) {
                 throw new \Exception('Cannot rate yourself');
             }
 
-            // Check if user has already rated this user in this exchange
             $existingRating = UserRating::where('rated_user_id', $ratedUserId)
                 ->where('rater_user_id', $raterUserId)
                 ->where('exchange_id', $data['exchange_id'])
@@ -52,7 +55,7 @@ class RatingRepository implements RatingInterface
                 throw new \Exception('You have already rated this user in this exchange');
             }
 
-            return UserRating::create([
+            $rating = UserRating::create([
                 'rated_user_id' => $ratedUserId,
                 'rater_user_id' => $raterUserId,
                 'rating' => $data['rating'],
@@ -61,6 +64,21 @@ class RatingRepository implements RatingInterface
                 'author' => $raterUserId,
                 'status' => 1
             ]);
+
+            $chatKey = $this->firebaseService->getChatKey($raterUserId, $ratedUserId, $exchange->exchange_id);
+
+            $this->firebaseService->updateHasRatedStatus($raterUserId, $chatKey);
+
+            $otherUserHasRated = UserRating::where('rater_user_id', $ratedUserId)
+                ->where('rated_user_id', $raterUserId)
+                ->where('exchange_id', $exchange->exchange_id)
+                ->exists();
+
+            if ($otherUserHasRated) {
+                $this->firebaseService->removeChatRoom($raterUserId, $ratedUserId, $chatKey);
+            }
+
+            return $rating;
         } catch (\Exception $e) {
             throw new \Exception('Unable to rate user: ' . $e->getMessage());
         }

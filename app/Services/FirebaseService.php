@@ -81,8 +81,6 @@ class FirebaseService
     {
         try {
 
-            // $messageRef = $this->storeMessage($data);
-
             $this->updateChatMetadata($data);
 
             if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
@@ -148,6 +146,32 @@ class FirebaseService
         } catch (\Exception $e) {
             \Log::error('Firebase error: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    public function updateHasRatedStatus(int $userId, string $chatKey): void
+    {
+        try {
+            $this->database
+                ->getReference('chat_rooms/' . $userId . '/' . $chatKey . '/has_rated')
+                ->set(true);
+            Log::info("Updated has_rated for user {$userId} in chat {$chatKey}");
+        } catch (\Exception $e) {
+            Log::error("Failed to update has_rated status: " . $e->getMessage());
+        }
+    }
+
+    public function removeChatRoom(int $userId1, int $userId2, string $chatKey): void
+    {
+        try {
+            $updates = [
+                'chat_rooms/' . $userId1 . '/' . $chatKey => null, 
+                'chat_rooms/' . $userId2 . '/' . $chatKey => null,
+            ];
+            $this->database->getReference()->update($updates);
+            Log::info("Removed chat room {$chatKey} for users {$userId1} and {$userId2}");
+        } catch (\Exception $e) {
+            Log::error("Failed to remove chat room: " . $e->getMessage());
         }
     }
 
