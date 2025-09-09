@@ -8,6 +8,9 @@ use App\Models\Message;
 use Illuminate\Http\Request;
 use App\Classes\ApiResponseClass;
 use App\Models\Exchange;
+use Illuminate\Http\JsonResponse;
+use App\Models\Notification;
+use Exception;
 
 class MessageController extends Controller
 {
@@ -286,11 +289,17 @@ class MessageController extends Controller
     public function getNotifications(): JsonResponse
     {
         try {
-            $userId = auth()->user()->users_id;
-            $notifications = \App\Models\Notification::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
-            return ApiResponseClass::successResponse('Notifications retrieved successfully', $notifications);
+            $userId = auth()->id();
+
+            $notifications = Notification::where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+
+            return ApiResponseClass::sendResponse($notifications, "Notifications retrieved successfully");
         } catch (Exception $e) {
-            return ApiResponseClass::throw(false, 'Failed to retrieve notifications', [$e->getMessage()]);
+            \Log::error('Failed to get notifications: ' . $e->getMessage());
+
+            return ApiResponseClass::sendResponse(null, 'Failed to retrieve notifications', 500);
         }
     }
 }
