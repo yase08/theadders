@@ -44,10 +44,8 @@ class UserRepository implements UserRepositoryInterface
     public function getUserById($userId)
     {
         try {
-            $user = User::where('users_id', $userId)
-                ->first();
-
-            return $user;
+            return User::withCount(['followers', 'wishlistItems', 'products'])
+                ->find($userId);
         } catch (\Exception $e) {
             throw new \Exception('Error getting user by ID: ' . $e->getMessage());
         }

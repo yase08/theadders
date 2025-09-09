@@ -57,6 +57,17 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
+    public function followers()
+    {
+        return $this->hasMany(UserFollow::class, 'users_id', 'users_id');
+    }
+
+    public function wishlistItems()
+    {
+        return $this->hasMany(ProductLove::class, 'user_id', 'users_id');
+    }
+
+
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];

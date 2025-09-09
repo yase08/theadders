@@ -15,7 +15,7 @@ use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Kreait\Firebase\Auth as FirebaseAuth; 
+use Kreait\Firebase\Auth as FirebaseAuth;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -221,24 +221,19 @@ class AuthController extends Controller
     public function getProfile()
     {
         try {
-            $user = auth()->user()->load('products');
-
-            $userStats = $this->getUserStats($user->users_id);
+            $user = auth()->user()->loadCount(['followers', 'wishlistItems', 'products']);
+            $user->load('products');
 
             $response = (new UserResource($user))->additional([
                 'stats' => [
-                    'followers_count' => $userStats['followers_count'],
-                    'wishlist_count' => $userStats['wishlist_count'],
-                    'products_count' => $userStats['products_count']
+                    'followers_count' => $user->followers_count,
+                    'wishlist_count' => $user->wishlist_items_count,
+                    'products_count' => $user->products_count
                 ],
                 'products' => $user->products
             ]);
 
-            return ApiResponseClass::sendResponse(
-                $response,
-                "success",
-                200
-            );
+            return ApiResponseClass::sendResponse($response, "success", 200);
         } catch (\Exception $e) {
             return ApiResponseClass::sendResponse(
                 null,
@@ -252,18 +247,16 @@ class AuthController extends Controller
     {
         try {
             $user = $this->userRepositoryInterface->getUserById($userId);
-            
+
             if (!$user) {
                 return ApiResponseClass::sendResponse(null, "User not found", 404);
             }
 
-            $userStats = $this->getUserStats($user->users_id);
-
             $response = (new UserResource($user))->additional([
                 'stats' => [
-                    'followers_count' => $userStats['followers_count'],
-                    'wishlist_count' => $userStats['wishlist_count'],
-                    'products_count' => $userStats['products_count']
+                    'followers_count' => $user->followers_count,
+                    'wishlist_count' => $user->wishlist_items_count,
+                    'products_count' => $user->products_count
                 ]
             ]);
 
@@ -271,14 +264,6 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return ApiResponseClass::sendResponse(null, "An error occurred: " . $e->getMessage(), 500);
         }
-    }
-    private function getUserStats($userId)
-    {
-        return [
-            'followers_count' => UserFollow::where('users_id', $userId)->count(),
-            'wishlist_count' => ProductLove::where('user_id', $userId)->count(),
-            'products_count' => Product::where('author', $userId)->count()
-        ];
     }
 
     public function updateFcmToken(Request $request)
@@ -331,12 +316,12 @@ class AuthController extends Controller
     public function updateAdditionalProfileInfo(Request $request)
     {
         try {
-            // debug
             \Log::info('Raw request input:', $request->all());
 
             $validatedData = $request->validate([
                 'hobbies' => 'nullable|string|max:1000',
                 'toys' => 'nullable|string|max:1000',
+                'fashion' => 'nullable|string|max:1000'
             ]);
 
             \Log::info('Validated data for update:', $validatedData);

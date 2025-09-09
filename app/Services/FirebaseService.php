@@ -12,6 +12,7 @@ use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\WebPushConfig;
 use Kreait\Firebase\Database\Transaction;
 use Kreait\Firebase\Database;
+use Kreait\Firebase\Exception\Messaging\NotFound;
 
 class FirebaseService
 {
@@ -165,7 +166,7 @@ class FirebaseService
     {
         try {
             $updates = [
-                'chat_rooms/' . $userId1 . '/' . $chatKey => null, 
+                'chat_rooms/' . $userId1 . '/' . $chatKey => null,
                 'chat_rooms/' . $userId2 . '/' . $chatKey => null,
             ];
             $this->database->getReference()->update($updates);
@@ -387,6 +388,15 @@ class FirebaseService
             }
 
             return ['success' => true, 'message' => 'Notification send successfully'];
+        } catch (NotFound $e) {
+            Log::warning("FCM token not found, deleting from DB: " . $token);
+
+            $user = \App\Models\User::where('fcm_token', $token)->first();
+            if ($user) {
+                $user->update(['fcm_token' => null]);
+            }
+            return ['success' => false, 'message' => 'Token not found and has been deleted.'];
+
         } catch (MessagingException $e) {
             Log::error('MessagingException: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
