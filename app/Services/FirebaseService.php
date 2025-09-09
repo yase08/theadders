@@ -427,6 +427,8 @@ class FirebaseService
                 'data' => $data,
             ]);
             Log::info('Notification saved to database for user: ' . $userId);
+
+            $this->syncUnreadNotificationCount($userId);
         } catch (\Exception $e) {
             Log::error('Failed to save notification to database: ' . $e->getMessage());
         }
@@ -482,5 +484,22 @@ class FirebaseService
     public function clearAllMessages(): void
     {
         $this->database->getReference('chats')->remove();
+    }
+
+    public function syncUnreadNotificationCount(int $userId): void
+    {
+        try {
+            $count = \App\Models\Notification::where('user_id', $userId)
+                ->whereNull('read_at')
+                ->count();
+
+            $this->database
+                ->getReference('user_notifications/' . $userId . '/unread_notifications_count')
+                ->set($count);
+
+            Log::info("Synced unread notification count for user {$userId} to {$count}");
+        } catch (\Exception $e) {
+            Log::error("Failed to sync unread notification count for user {$userId}: " . $e->getMessage());
+        }
     }
 }

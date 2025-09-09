@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JwtMiddleware;
@@ -36,6 +37,7 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
     Route::get('/user/{userId}', [AuthController::class, 'getUserById']);
     Route::post('/profile/additional-info', [AuthController::class, 'updateAdditionalProfileInfo']);
+    Route::put('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
 });
 // category start
 Route::post('/category', [CategoryController::class, 'storeCategory']);
