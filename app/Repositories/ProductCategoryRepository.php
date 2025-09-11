@@ -82,57 +82,53 @@ class ProductCategoryRepository implements ProductCategoryInterface
         }
     }
 
-
     public function getProducts(array $filters)
     {
+        $completedRequesterProductIds = Exchange::where('status', 'Completed')->pluck('product_id');
+        $completedReceiverProductIds = Exchange::where('status', 'Completed')->pluck('to_product_id');
+        $allCompletedProductIds = $completedRequesterProductIds->merge($completedReceiverProductIds)->unique();
+
         $query = User::with([
-            'products' => function ($query) use ($filters) {
-                $query->filter([
-                    'category_id' => $filters['category_id'] ?? null,
-                    'category_sub_id' => $filters['category_sub_id'] ?? null,
-                    'search' => $filters['search'] ?? null,
-                    'sort' => $filters['sort'] ?? null,
-                    'size' => $filters['size'] ?? null,
-                    'price_range' => $filters['price_range'] ?? null,
-                ])->whereDoesntHave('exchanges', function ($q) {
-                    $q->where('status', 'Completed');
-                });
+            'products' => function ($query) use ($filters, $allCompletedProductIds) {
+                $query
+                    ->filter([
+                        'category_id' => $filters['category_id'] ?? null,
+                        'category_sub_id' => $filters['category_sub_id'] ?? null,
+                        'search' => $filters['search'] ?? null,
+                        'sort' => $filters['sort'] ?? null,
+                        'size' => $filters['size'] ?? null,
+                        'price_range' => $filters['price_range'] ?? null,
+                    ])
+                    ->whereNotIn('product_id', $allCompletedProductIds)
+
+                    ->withCount([
+                        'ratings as total_ratings' => function ($q) {
+                            $q->where('status', 1);
+                        },
+                        'productLoves as is_wishlist' => function ($q) {
+                            $q->where('user_id_author', auth()->id())->where('status', 1);
+                        }
+                    ])
+                    ->withAvg([
+                        'ratings as average_rating' => function ($q) {
+                            $q->where('status', 1);
+                        }
+                    ], 'rating');
             },
             'products.category',
-            'products.categorySub',
-            'products.ratings'
+            'products.categorySub'
         ])
-            ->whereHas('products', function ($query) use ($filters) {
+            ->whereHas('products', function ($query) use ($filters, $allCompletedProductIds) {
                 $query->filter([
                     'category_id' => $filters['category_id'] ?? null,
                     'category_sub_id' => $filters['category_sub_id'] ?? null,
                     'search' => $filters['search'] ?? null,
-                    'sort' => $filters['sort'] ?? null,
-                    'size' => $filters['size'] ?? null,
-                    'price_range' => $filters['price_range'] ?? null,
-                ])->whereDoesntHave('exchanges', function ($q) {
-                    $q->where('status', 'Completed');
-                });
+                ])
+                    ->whereNotIn('product_id', $allCompletedProductIds);
             })
             ->where('users_id', '!=', auth()->id());
 
         $result = isset($filters['per_page']) ? $query->paginate($filters['per_page']) : $query->get();
-
-        
-        $result->each(function ($user) {
-            
-            $user->products->each(function ($product) {
-                $ratings = $product->ratings()->where('status', 1)->get();
-                $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
-                $product->total_ratings = $ratings->count();
-
-                
-                $product->is_wishlist = $product->productLoves()
-                    ->where('user_id_author', auth()->id())
-                    ->where('status', 1)
-                    ->exists();
-            });
-        });
 
         return $result;
     }
@@ -170,7 +166,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                         ->orWhere('to_user_id', $userId);
                 })
                 ->with([
-                    
                     'requesterProduct' => function ($q) {
                         $q->withCount('ratings')->withAvg('ratings', 'rating');
                     },
