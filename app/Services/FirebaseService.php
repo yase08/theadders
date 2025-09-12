@@ -80,7 +80,6 @@ class FirebaseService
     public function sendMessage($data, $shouldSendNotification = true)
     {
         try {
-            $messageRef = $this->storeMessage($data);
             $this->updateChatMetadata($data);
 
             if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
