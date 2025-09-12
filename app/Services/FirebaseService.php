@@ -365,6 +365,14 @@ class FirebaseService
 
     public function sendNotification($token, $title, $body, $data = [])
     {
+        if (isset($data['user_id'])) {
+            $this->saveNotification($data['user_id'], $title, $body, $data);
+        }
+
+        if (empty($token)) {
+            Log::warning('Attempted to send notification but token was empty.');
+            return ['success' => false, 'message' => 'Token was empty.'];
+        }
         try {
             $notification = Notification::create($title, $body);
 
@@ -383,10 +391,6 @@ class FirebaseService
 
             $this->messaging->send($message);
 
-            if (isset($data['user_id'])) {
-                $this->saveNotification($data['user_id'], $title, $body, $data);
-            }
-
             return ['success' => true, 'message' => 'Notification send successfully'];
         } catch (NotFound $e) {
             Log::warning("FCM token not found, deleting from DB: " . $token);
@@ -396,7 +400,6 @@ class FirebaseService
                 $user->update(['fcm_token' => null]);
             }
             return ['success' => false, 'message' => 'Token not found and has been deleted.'];
-
         } catch (MessagingException $e) {
             Log::error('MessagingException: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
