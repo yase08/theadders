@@ -81,10 +81,26 @@ class FirebaseService
     public function sendMessage($data, $shouldSendNotification = true)
     {
         try {
-
+            $messageRef = $this->storeMessage($data);
             $this->updateChatMetadata($data);
 
             if ($shouldSendNotification && !empty($data['receiver']->fcm_token)) {
+                $this->saveNotification(
+                    $data['receiver']->users_id,
+                    'New message from ' . $data['sender']->fullname,
+                    substr($data['message'], 0, 100) . (strlen($data['message']) > 100 ? '...' : ''),
+                    [
+                        'exchange_id' => $data['exchange_id'] ?? '',
+                        'sender_id' => (string)$data['sender']->users_id,
+                        'message_id' => $messageRef->getKey() ?? '',
+                        'type' => 'chat_message',
+                        'room_id' => $data['room_id'] ?? '',
+                        'priority' => $data['priority'] ?? 'normal',
+                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        'user_id' => $data['receiver']->users_id
+                    ]
+                );
+
                 $shouldSkipNotification = false;
 
                 if (isset($data['client_status'])) {
@@ -122,22 +138,6 @@ class FirebaseService
                         ]));
 
                     $this->messaging->send($message);
-                    Log::info('Notification sent for message: ' . ($messageRef->getKey() ?? 'unknown'));
-                    $this->saveNotification(
-                        $data['receiver']->users_id,
-                        'New message from ' . $data['sender']->fullname,
-                        substr($data['message'], 0, 100) . (strlen($data['message']) > 100 ? '...' : ''),
-                        [
-                            'exchange_id' => $data['exchange_id'] ?? '',
-                            'sender_id' => (string)$data['sender']->users_id,
-                            'message_id' => $data['message_id'] ?? '',
-                            'type' => 'chat_message',
-                            'room_id' => $data['room_id'] ?? '',
-                            'priority' => $data['priority'] ?? 'normal',
-                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                            'user_id' => $data['receiver']->users_id
-                        ]
-                    );
                 } else {
                     Log::info('Notification skipped for message due to status: ' . ($data['client_status'] ?? 'unknown'));
                 }
