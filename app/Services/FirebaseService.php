@@ -77,7 +77,6 @@ class FirebaseService
         }
     }
 
-
     public function sendMessage($data, $shouldSendNotification = true)
     {
         try {
@@ -92,7 +91,7 @@ class FirebaseService
                     [
                         'exchange_id' => $data['exchange_id'] ?? '',
                         'sender_id' => (string)$data['sender']->users_id,
-                        'message_id' => $messageRef->getKey() ?? '',
+                        'message_id' => $data['message_id'] ?? '',
                         'type' => 'chat_message',
                         'room_id' => $data['room_id'] ?? '',
                         'priority' => $data['priority'] ?? 'normal',
