@@ -47,15 +47,19 @@ class ExchangeController extends Controller
       \Log::info('message: ', ['ini' => "Kamu mendapatkan permintaan exchange baru dari " . auth()->user()->fullname]);
 
       if ($receiver && $receiver->fcm_token && $receiver->id != auth()->id()) {
-        \Log::info('notif terkirim: '); 
+        \Log::info('notif terkirim: ');
         $this->firebaseService->sendNotification(
           $receiver->fcm_token,
           "Exchange Request",
           "You have received a new exchange request from " . auth()->user()->fullname,
           [
-            'exchange_id' => $exchange->id,
+            'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_request',
             'user_id' => $receiver->users_id,
+            'requester_id' => $exchange->user_id,
+            'receiver_id' => $exchange->to_user_id,
+            'requester_product_id' => $exchange->product_id,
+            'receiver_product_id' => $exchange->to_product_id,
           ]
         );
       }
@@ -111,9 +115,14 @@ class ExchangeController extends Controller
           "Exchange Approved",
           "Your exchange request has been approved by " . auth()->user()->fullname,
           [
-            'exchange_id' => $exchange->id,
-            'type' => 'exchange_request',
+            'exchange_id' => $exchange->exchange_id,
+            'type' => 'exchange_approved',
             'user_id' => $requester->users_id,
+            'requester_id' => $exchange->user_id,
+            'receiver_id' => $exchange->to_user_id,
+            'requester_product_id' => $exchange->product_id,
+            'receiver_product_id' => $exchange->to_product_id,
+
           ]
         );
       }
@@ -148,9 +157,13 @@ class ExchangeController extends Controller
           "Exchange Rejected",
           "Your exchange request has been rejected by " . auth()->user()->fullname,
           [
-            'exchange_id' => $exchange->id,
-            'type' => 'exchange_request',
+            'exchange_id' => $exchange->exchange_id,
+            'type' => 'exchange_declined',
             'user_id' => $requester->users_id,
+            'requester_id' => $exchange->user_id,
+            'receiver_id' => $exchange->to_user_id,
+            'requester_product_id' => $exchange->product_id,
+            'receiver_product_id' => $exchange->to_product_id,
           ]
         );
       }
@@ -202,11 +215,11 @@ class ExchangeController extends Controller
     }
   }
 
-  public function getIncomingExchanges(Request $request) 
+  public function getIncomingExchanges(Request $request)
   {
     try {
-      $search = $request->query('search'); 
-      $exchanges = $this->exchangeInterface->getIncomingExchanges($search); 
+      $search = $request->query('search');
+      $exchanges = $this->exchangeInterface->getIncomingExchanges($search);
       return response()->json([
         'success' => true,
         'data' => $exchanges,
@@ -246,7 +259,7 @@ class ExchangeController extends Controller
 
       DB::commit();
 
-      
+
       $otherUserId = auth()->id() === $exchange->user_id
         ? $exchange->to_user_id
         : $exchange->user_id;
@@ -262,6 +275,10 @@ class ExchangeController extends Controller
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_completed',
             'user_id' => $otherUser->users_id,
+            'requester_id' => $exchange->user_id,
+            'receiver_id' => $exchange->to_user_id,
+            'requester_product_id' => $exchange->product_id,
+            'receiver_product_id' => $exchange->to_product_id,
           ]
         );
       }
@@ -288,7 +305,7 @@ class ExchangeController extends Controller
 
       DB::commit();
 
-      
+
       $otherUserId = auth()->id() === $exchange->user_id
         ? $exchange->to_user_id
         : $exchange->user_id;
@@ -304,6 +321,10 @@ class ExchangeController extends Controller
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_cancelled',
             'user_id' => $otherUser->users_id,
+            'requester_id' => $exchange->user_id,
+            'receiver_id' => $exchange->to_user_id,
+            'requester_product_id' => $exchange->product_id,
+            'receiver_product_id' => $exchange->to_product_id,
           ]
         );
       }
