@@ -19,7 +19,7 @@ class Product extends Model
         'product_name',
         'description',
         'thumbail',
-        'price', // This will now store the price range string
+        'price',
         'item_codition',
         'view_count',
         'created',
@@ -29,7 +29,7 @@ class Product extends Model
     ];
 
     protected $casts = [
-        // 'price' => 'decimal:2', // Remove or comment out this line
+        // 'price' => 'decimal:2',
         'view_count' => 'integer',
     ];
 
@@ -62,11 +62,17 @@ class Product extends Model
     {
         return $this->hasMany(ProductLove::class, 'product_id', 'product_id');
     }
-    public function exchanges()
+
+    public function exchangesAsRequester()
     {
-        return $this->hasMany(Exchange::class, 'product_id', 'product_id')
-                    ->orWhere('to_product_id', $this->getTable() . '.product_id');
+        return $this->hasMany(Exchange::class, 'product_id', 'product_id');
     }
+
+    public function exchangesAsReceiver()
+    {
+        return $this->hasMany(Exchange::class, 'to_product_id', 'product_id');
+    }
+
 
     public function scopeFilter($query, array $filters)
     {
@@ -90,14 +96,12 @@ class Product extends Model
         });
 
         $query->when($filters['price_range'] ?? false, function ($query, $range) {
-            // Filter directly by the stored price range string
             return $query->where('price', $range);
         });
 
         $query->when($filters['sort'] ?? false, function ($query, $sort) {
             return match ($sort) {
                 'recent' => $query->orderBy('created', 'desc'),
-                // Removed 'price_high' and 'price_low' as 'price' is now a string range
                 'relevance' => $query->orderBy('view_count', 'desc'),
                 default => $query->orderBy('created', 'desc'),
             };

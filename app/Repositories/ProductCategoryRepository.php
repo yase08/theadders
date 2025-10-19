@@ -18,7 +18,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
         try {
             $product = Product::create([
                 'category_id' => $productData['category_id'],
-                
+
                 'product_name' => $productData['product_name'],
                 'description' => $productData['description'] ?? null,
                 'thumbail' => $productData['thumbail'] ?? null,
@@ -28,7 +28,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'author' => auth()->id(),
             ]);
 
-            
+
             if (isset($productData['product_images']) && is_array($productData['product_images'])) {
                 foreach ($productData['product_images'] as $image) {
                     ProductImage::create([
@@ -36,7 +36,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                         'file_image' => $image,
                         'created' => now(),
                         'author' => auth()->id(),
-                        'status' => 1 
+                        'status' => 1
                     ]);
                 }
             }
@@ -50,7 +50,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function storeCategory($category)
     {
-        
+
         try {
             $category = Categories::create([
                 'category_name' => $category['category_name'],
@@ -100,7 +100,6 @@ class ProductCategoryRepository implements ProductCategoryInterface
                         'price_range' => $filters['price_range'] ?? null,
                     ])
                     ->whereNotIn('product_id', $allCompletedProductIds)
-
                     ->withCount([
                         'ratings as total_ratings' => function ($q) {
                             $q->where('status', 1);
@@ -130,7 +129,16 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
         $result = isset($filters['per_page']) ? $query->paginate($filters['per_page']) : $query->get();
 
-        return $result;
+        $grouped = [];
+
+        foreach ($result as $user) {
+            foreach ($user->products as $product) {
+                $categoryName = $product->category->category_name ?? 'Others';
+                $grouped[$categoryName][] = $product;
+            }
+        }
+
+        return $grouped;
     }
 
     public function getUserProducts(array $filters)
@@ -143,7 +151,10 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 $q->where('status', 1);
             }], 'rating')
             ->where('author', auth()->id())
-            ->whereDoesntHave('exchanges', function ($q) {
+            ->whereDoesntHave('exchangesAsRequester', function ($q) {
+                $q->where('status', 'Completed');
+            })
+            ->whereDoesntHave('exchangesAsReceiver', function ($q) {
                 $q->where('status', 'Completed');
             });
 
@@ -172,7 +183,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                     'receiverProduct' => function ($q) {
                         $q->withCount('ratings')->withAvg('ratings', 'rating');
                     },
-                    'requester:users_id,fullname,avatar', 
+                    'requester:users_id,fullname,avatar',
                     'receiver:users_id,fullname,avatar'
                 ]);
 
@@ -229,15 +240,15 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 ->where('product_id', $productId)
                 ->firstOrFail();
 
-            
+
             $ratings = $product->ratings()->where('status', 1)->get();
             $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
             $product->total_ratings = $ratings->count();
 
-            
+
             $product->increment('view_count');
 
-            
+
             $this->trackProductView($product->product_id);
 
             return $product;
@@ -273,10 +284,10 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 ->where('author', auth()->id())
                 ->firstOrFail();
 
-            
+
             ProductImage::where('product_id', $productId)->delete();
 
-            
+
             $product->delete();
 
             return true;
@@ -294,26 +305,26 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
             $updateData = [
                 'category_id' => $productData['category_id'] ?? $product->category_id,
-                
+
                 'product_name' => $productData['product_name'] ?? $product->product_name,
                 'description' => $productData['description'] ?? $product->description,
                 'price' => $productData['price'] ?? $product->price,
                 'item_codition' => $productData['item_codition'] ?? $product->item_codition,
             ];
 
-            
+
             if (isset($productData['thumbail'])) {
                 $updateData['thumbail'] = $productData['thumbail'];
             }
 
             $product->update($updateData);
 
-            
+
             if (isset($productData['product_images']) && is_array($productData['product_images'])) {
-                
+
                 ProductImage::where('product_id', $productId)->delete();
 
-                
+
                 foreach ($productData['product_images'] as $image) {
                     ProductImage::create([
                         'product_id' => $product->product_id,

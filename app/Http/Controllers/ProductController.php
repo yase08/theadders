@@ -71,6 +71,7 @@ class ProductController extends Controller
             $validatedData = $request->validated();
 
             $products = $this->productCategoryInterface->getProducts($validatedData);
+            
             return response()->json([
                 'message' => 'success',
                 'data' => $products
