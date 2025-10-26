@@ -221,14 +221,20 @@ class AuthController extends Controller
     public function getProfile()
     {
         try {
-            $user = auth()->user()->loadCount(['followers', 'wishlistItems', 'products']);
+            $user = auth()->user()->loadCount([
+                'followers',
+                'followings',
+                'wishlistItems',
+                'products'
+            ]);
             $user->load('products');
 
             $response = (new UserResource($user))->additional([
                 'stats' => [
                     'followers_count' => $user->followers_count,
-                    'wishlist_count' => $user->wishlist_items_count,
-                    'products_count' => $user->products_count
+                    'following_count' => $user->followings_count,
+                    'wishlist_count'  => $user->wishlist_items_count,
+                    'products_count'  => $user->products_count
                 ],
                 'products' => $user->products
             ]);
