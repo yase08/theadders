@@ -9,9 +9,6 @@ use App\Http\Requests\SignUpRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Interfaces\UserRepositoryInterface;
-use App\Models\ProductLove;
-use App\Models\Product;
-use App\Models\UserFollow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -357,6 +354,53 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error updating additional profile info: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return ApiResponseClass::sendResponse(null, "An error occurred: " . $e->getMessage(), 500);
+        }
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
+        }
+
+        $userIdForLog = $user->users_id; 
+        $firebaseUid = $user->firebase_uid;
+
+        DB::beginTransaction();
+        try {
+            
+            auth()->guard('api')->logout();
+            
+            $user->delete(); 
+            
+            if ($firebaseUid) {
+                try {
+                    $this->firebaseAuth->deleteUser($firebaseUid);
+                    \Log::info("Successfully deleted Firebase user: " . $firebaseUid);
+                
+                } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
+                    
+                    \Log::warning("Firebase user not found during deletion (UID: {$firebaseUid}). Proceeding with local deletion anyway.");
+                
+                } catch (\Exception $firebaseEx) {
+                    
+                    throw new \Exception("Firebase delete error: " . $firebaseEx->getMessage());
+                }
+            }
+            
+            DB::commit();
+
+            \Log::info("Successfully deleted account for user ID: " . $userIdForLog);
+            return ApiResponseClass::sendResponse(null, "Your account has been successfully deleted.", 200);
+
+        } catch (\Throwable $ex) {
+            DB::rollBack();
+
+            \Log::error('Account deletion error for user ID ' . $userIdForLog . ': ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
+            
+            return ApiResponseClass::sendResponse(null, "An error occurred while deleting your account. Please try again.", 500);
         }
     }
 }

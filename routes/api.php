@@ -33,6 +33,7 @@ Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
 Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/profile', [AuthController::class, 'getProfile']);
+    Route::delete('/profile/delete', [AuthController::class, 'deleteAccount']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
     Route::get('/user/{userId}', [AuthController::class, 'getUserById']);
