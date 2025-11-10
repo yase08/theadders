@@ -18,12 +18,12 @@ use App\Models\User;
 class AuthController extends Controller
 {
     private UserRepositoryInterface $userRepositoryInterface;
-    private FirebaseAuth $firebaseAuth; 
+    private FirebaseAuth $firebaseAuth;
 
     public function __construct(UserRepositoryInterface $userRepositoryInterface, FirebaseAuth $firebaseAuth)
     {
         $this->userRepositoryInterface = $userRepositoryInterface;
-        $this->firebaseAuth = $firebaseAuth; 
+        $this->firebaseAuth = $firebaseAuth;
     }
 
     public function signUp(SignUpRequest $req)
@@ -57,10 +57,9 @@ class AuthController extends Controller
                 'firebase_uid' => $user->firebase_uid,
                 "message" => "success"
             ], 201);
-
         } catch (\Exception $ex) {
             DB::rollBack();
-           \Log::error('Signup error: ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
+            \Log::error('Signup error: ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
             return ApiResponseClass::sendResponse(null, "An error occurred during registration: " . $ex->getMessage(), 500);
         }
     }
@@ -73,30 +72,30 @@ class AuthController extends Controller
         ];
 
         try {
-           \Log::info('Login attempt for email: ' . $credentials['email']);
+            \Log::info('Login attempt for email: ' . $credentials['email']);
 
             $user = $this->userRepositoryInterface->getUserByEmail($credentials['email']);
 
             if (!$user) {
-               \Log::warning('User not found for email: ' . $credentials['email']);
+                \Log::warning('User not found for email: ' . $credentials['email']);
                 return ApiResponseClass::sendResponse(null, "Invalid email or password", 401);
             }
 
             if (!Hash::check($req->password, $user->password)) {
-               \Log::warning('Invalid password for email: ' . $credentials['email']);
+                \Log::warning('Invalid password for email: ' . $credentials['email']);
                 return ApiResponseClass::sendResponse(null, "Invalid email or password", 401);
             }
 
             if (empty($user->firebase_uid)) {
                 $user->firebase_uid = (string) $user->users_id;
                 $user->save();
-                $user->refresh(); 
-               \Log::info('Populated empty firebase_uid for user: ' . $user->email . ' with Laravel ID: ' . $user->firebase_uid);
+                $user->refresh();
+                \Log::info('Populated empty firebase_uid for user: ' . $user->email . ' with Laravel ID: ' . $user->firebase_uid);
             }
 
             $laravelApiToken = auth()->guard('api')->login($user);
-           \Log::info('Laravel login successful for email: ' . $user->email);
-           \Log::info('Laravel API Token: ' . $laravelApiToken);
+            \Log::info('Laravel login successful for email: ' . $user->email);
+            \Log::info('Laravel API Token: ' . $laravelApiToken);
 
             $firebaseCustomTokenString = null;
             $firebaseUidForToken = $user->firebase_uid;
@@ -104,12 +103,15 @@ class AuthController extends Controller
             try {
                 $firebaseTokenObject = $this->firebaseAuth->createCustomToken($firebaseUidForToken);
                 $firebaseCustomTokenString = $firebaseTokenObject->toString();
-               \Log::info('Firebase custom token created for UID: ' . $firebaseUidForToken);
+                \Log::info('Firebase custom token created for UID: ' . $firebaseUidForToken);
             } catch (\Exception $e) {
-               \Log::error('Error processing Firebase custom token during login: ' . $e->getMessage());
+                \Log::error('Error processing Firebase custom token during login: ' . $e->getMessage());
             }
 
-            $hasAdditionalProfileInfo = !empty($user->hobbies) && !empty($user->toys) && !empty($user->fashion);
+            $hasAdditionalProfileInfo =
+                !empty($user->hobbies) ||
+                !empty($user->toys) ||
+                !empty($user->fashion);
 
             return response()->json([
                 'user' => new UserResource($user),
@@ -119,10 +121,9 @@ class AuthController extends Controller
                 'has_additional_profile_info' => $hasAdditionalProfileInfo,
                 "message" => "success"
             ], 200);
-
         } catch (\Throwable $ex) {
-           \Log::error('Login error: ' . $ex->getMessage() . ' in ' . $ex->getFile() . ' on line ' . $ex->getLine());
-           \Log::error($ex->getTraceAsString());
+            \Log::error('Login error: ' . $ex->getMessage() . ' in ' . $ex->getFile() . ' on line ' . $ex->getLine());
+            \Log::error($ex->getTraceAsString());
             return response()->json(['error' => 'An error occurred during login.'], 500);
         }
     }
@@ -135,7 +136,7 @@ class AuthController extends Controller
                 'firebase_uid' => 'required|string|max:255',
             ]);
         } catch (ValidationException $e) {
-           \Log::error('Validation failed for syncFirebaseUser: ', $e->errors());
+            \Log::error('Validation failed for syncFirebaseUser: ', $e->errors());
             return ApiResponseClass::sendResponse($e->errors(), 'Validation errors', 422);
         }
 
@@ -148,27 +149,27 @@ class AuthController extends Controller
 
             if (!$user) {
                 DB::rollBack();
-               \Log::warning("User not found with email: {$email} during syncFirebaseUser. Client states user should already be registered.");
+                \Log::warning("User not found with email: {$email} during syncFirebaseUser. Client states user should already be registered.");
                 return ApiResponseClass::sendResponse(null, 'User with this email not found. Please ensure the user is registered in Laravel first.', 404);
             }
 
             $conflictingUser = User::where('firebase_uid', $actualFirebaseUid)
-                                   ->where('users_id', '!=', $user->users_id)
-                                   ->first();
+                ->where('users_id', '!=', $user->users_id)
+                ->first();
 
             if ($conflictingUser) {
                 DB::rollBack();
-               \Log::error("Conflict: Firebase UID {$actualFirebaseUid} is already linked to a different Laravel user (ID: {$conflictingUser->users_id}). Cannot link to user {$user->users_id} with email {$email}.");
+                \Log::error("Conflict: Firebase UID {$actualFirebaseUid} is already linked to a different Laravel user (ID: {$conflictingUser->users_id}). Cannot link to user {$user->users_id} with email {$email}.");
                 return ApiResponseClass::sendResponse(null, 'This Firebase account (Google/Apple) is already linked to another user profile in our system.', 409);
             }
 
             if ($user->firebase_uid !== $actualFirebaseUid) {
                 $user->firebase_uid = $actualFirebaseUid;
-               \Log::info("Updating Firebase UID to '{$actualFirebaseUid}' for user with email: {$email} (Laravel User ID: {$user->users_id})");
+                \Log::info("Updating Firebase UID to '{$actualFirebaseUid}' for user with email: {$email} (Laravel User ID: {$user->users_id})");
             } else {
-               \Log::info("Firebase UID '{$actualFirebaseUid}' already set for user with email: {$email} (Laravel User ID: {$user->users_id}). No update needed for firebase_uid itself.");
+                \Log::info("Firebase UID '{$actualFirebaseUid}' already set for user with email: {$email} (Laravel User ID: {$user->users_id}). No update needed for firebase_uid itself.");
             }
-            
+
             $user->email_verified_at = $user->email_verified_at ?? now();
             $user->save();
 
@@ -182,10 +183,9 @@ class AuthController extends Controller
                 'token' => $laravelApiToken,
                 "message" => "success"
             ], 200);
-
         } catch (\Throwable $ex) {
             DB::rollBack();
-           \Log::error('Error in syncFirebaseUser: ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
+            \Log::error('Error in syncFirebaseUser: ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
             return ApiResponseClass::sendResponse(null, 'An error occurred during user sync: ' . $ex->getMessage(), 500);
         }
     }
@@ -309,7 +309,6 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'success',
             ], 200);
-
         } catch (\Throwable $ex) {
             \Log::error('Logout error: ' . $ex->getMessage() . ' in ' . $ex->getFile() . ' on line ' . $ex->getLine());
             return ApiResponseClass::sendResponse(null, 'An error occurred during logout.', 500);
@@ -348,7 +347,6 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'success',
             ], 200);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponseClass::sendResponse($e->errors(), 'Validation errors', 422);
         } catch (\Exception $e) {
@@ -365,41 +363,38 @@ class AuthController extends Controller
             return ApiResponseClass::sendResponse(null, "User not authenticated.", 401);
         }
 
-        $userIdForLog = $user->users_id; 
+        $userIdForLog = $user->users_id;
         $firebaseUid = $user->firebase_uid;
 
         DB::beginTransaction();
         try {
-            
+
             auth()->guard('api')->logout();
-            
-            $user->delete(); 
-            
+
+            $user->delete();
+
             if ($firebaseUid) {
                 try {
                     $this->firebaseAuth->deleteUser($firebaseUid);
                     \Log::info("Successfully deleted Firebase user: " . $firebaseUid);
-                
                 } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
-                    
+
                     \Log::warning("Firebase user not found during deletion (UID: {$firebaseUid}). Proceeding with local deletion anyway.");
-                
                 } catch (\Exception $firebaseEx) {
-                    
+
                     throw new \Exception("Firebase delete error: " . $firebaseEx->getMessage());
                 }
             }
-            
+
             DB::commit();
 
             \Log::info("Successfully deleted account for user ID: " . $userIdForLog);
             return ApiResponseClass::sendResponse(null, "Your account has been successfully deleted.", 200);
-
         } catch (\Throwable $ex) {
             DB::rollBack();
 
             \Log::error('Account deletion error for user ID ' . $userIdForLog . ': ' . $ex->getMessage() . ' Stack: ' . $ex->getTraceAsString());
-            
+
             return ApiResponseClass::sendResponse(null, "An error occurred while deleting your account. Please try again.", 500);
         }
     }
