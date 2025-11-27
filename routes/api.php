@@ -122,3 +122,14 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/user/{userId}/ratings/received', [RatingController::class, 'getUserRatings']);
     Route::get('/user/{userId}/ratings/given', [RatingController::class, 'getGivenRatings']);
 });
+
+// Helpdesk routes
+use App\Http\Controllers\HelpdeskController;
+Route::prefix('helpdesk')->group(function () {
+    Route::get('/categories', [HelpdeskController::class, 'getCategories']);
+    Route::get('/categories/{id}', [HelpdeskController::class, 'getCategory']);
+    Route::get('/articles', [HelpdeskController::class, 'getArticles']);
+    Route::get('/articles/{id}', [HelpdeskController::class, 'getArticle']);
+    Route::get('/categories/{id}/articles', [HelpdeskController::class, 'getArticlesByCategory']);
+    Route::get('/navigation', [HelpdeskController::class, 'getNavigation']);
+});

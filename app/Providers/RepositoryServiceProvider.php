@@ -14,6 +14,8 @@ use App\Repositories\UserRepository;
 use App\Repositories\UserFollowRepository;
 use App\Repositories\RatingRepository;
 use App\Repositories\ExchangeRepository;
+use App\Interfaces\HelpdeskInterface;
+use App\Repositories\HelpdeskRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -34,6 +36,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserFollowInterface::class, UserFollowRepository::class);
 
         $this->app->bind(RatingInterface::class, RatingRepository::class);
+
+        $this->app->bind(HelpdeskInterface::class, HelpdeskRepository::class);
     }
 
     /**
