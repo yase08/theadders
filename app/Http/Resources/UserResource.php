@@ -28,6 +28,10 @@ class UserResource extends JsonResource
             $array['products'] = $this->additional['products'];
         }
 
+        if ($this->additional['created'] ?? null) {
+            $array['created'] = $this->additional['created'];
+        }
+
         return $array;
     }
 }

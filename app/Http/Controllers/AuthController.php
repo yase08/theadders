@@ -233,7 +233,8 @@ class AuthController extends Controller
                     'wishlist_count'  => $user->wishlist_items_count,
                     'products_count'  => $user->products_count
                 ],
-                'products' => $user->products
+                'products' => $user->products,
+                'created' => $user->created
             ]);
 
             return ApiResponseClass::sendResponse($response, "success", 200);
