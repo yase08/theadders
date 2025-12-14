@@ -16,6 +16,8 @@ use App\Repositories\RatingRepository;
 use App\Repositories\ExchangeRepository;
 use App\Interfaces\HelpdeskInterface;
 use App\Repositories\HelpdeskRepository;
+use App\Interfaces\InboxOnboardingInterface;
+use App\Repositories\InboxOnboardingRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -38,6 +40,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(RatingInterface::class, RatingRepository::class);
 
         $this->app->bind(HelpdeskInterface::class, HelpdeskRepository::class);
+
+        $this->app->bind(InboxOnboardingInterface::class, InboxOnboardingRepository::class);
     }
 
     /**

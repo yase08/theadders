@@ -133,3 +133,10 @@ Route::prefix('helpdesk')->group(function () {
     Route::get('/categories/{id}/articles', [HelpdeskController::class, 'getArticlesByCategory']);
     Route::get('/navigation', [HelpdeskController::class, 'getNavigation']);
 });
+
+// Inbox Onboarding routes
+use App\Http\Controllers\InboxOnboardingController;
+Route::prefix('inbox-onboarding')->group(function () {
+    Route::get('/slides', [InboxOnboardingController::class, 'getSlides']);
+    Route::get('/slides/{id}', [InboxOnboardingController::class, 'getSlide']);
+});
