@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class ProductRequest extends FormRequest
 {
     /**
-     * Tentukan apakah pengguna diizinkan untuk membuat request ini.
+     * 
      *
      * @return bool
      */
@@ -17,7 +17,7 @@ class ProductRequest extends FormRequest
     }
 
     /**
-     * Mendapatkan aturan validasi yang berlaku untuk request ini.
+     * 
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
@@ -28,16 +28,16 @@ class ProductRequest extends FormRequest
             // 'category_sub_id' => 'nullable|integer|exists:mst_category_sub,category_sub_id',
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'price' => 'nullable|string|in:1-30,20-60,50-110,100-210,200-500', // Changed to string and specific values
+            'thumbail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
+            'price' => 'nullable|string|in:1-30,20-60,50-110,100-210,200-500', 
             'item_codition' => 'nullable|integer|in:1,2,3',
             'product_images' => 'nullable|array',
-            'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'product_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:30720'
         ];
     }
 
     /**
-     * Mendapatkan pesan kesalahan yang digunakan oleh validasi.
+     * 
      *
      * @return array<string, string>
      */
@@ -49,7 +49,7 @@ class ProductRequest extends FormRequest
             'product_name.max' => 'Product name must not exceed 255 characters.',
             'category_id.exists' => 'The selected category is invalid.',
             // 'category_sub_id.exists' => 'The selected subcategory is invalid.',
-            'price.in' => 'The selected price range is invalid.', // Updated message
+            'price.in' => 'The selected price range is invalid.', 
             'item_codition.in' => 'Item condition is invalid.',
         ];
     }

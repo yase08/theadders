@@ -9,6 +9,7 @@ use App\Interfaces\ProductCategoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Services\FirebaseService;
+use App\Services\ImageService;
 
 use App\Http\Requests\TradeRequest;
 
@@ -16,12 +17,17 @@ class ProductController extends Controller
 {
     private ProductCategoryInterface $productCategoryInterface;
     protected $firebaseService;
+    protected $imageService;
 
 
-    public function __construct(ProductCategoryInterface $productCategoryInterface, FirebaseService $firebaseService)
-    {
+    public function __construct(
+        ProductCategoryInterface $productCategoryInterface, 
+        FirebaseService $firebaseService,
+        ImageService $imageService
+    ) {
         $this->firebaseService = $firebaseService;
         $this->productCategoryInterface = $productCategoryInterface;
+        $this->imageService = $imageService;
     }
 
     public function storeProduct(ProductRequest $request)
@@ -33,14 +39,14 @@ class ProductController extends Controller
 
             
             if ($request->hasFile('thumbail')) {
-                $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
+                $validatedData['thumbail'] = $this->imageService->processThumbnail($request->file('thumbail'));
             }
 
             
             if ($request->hasFile('product_images')) {
                 $productImages = [];
                 foreach ($request->file('product_images') as $image) {
-                    $filename = $image->store('product_images', 'public');
+                    $filename = $this->imageService->processProductImage($image);
                     $productImages[] = $filename;
                 }
                 $validatedData['product_images'] = $productImages;
@@ -63,6 +69,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
 
 
     public function index(ProductIndexRequest $request)
@@ -173,7 +180,7 @@ class ProductController extends Controller
 
             
             if ($request->hasFile('thumbail')) {
-                $validatedData['thumbail'] = $request->file('thumbail')->store('product_images', 'public');
+                $validatedData['thumbail'] = $this->imageService->processThumbnail($request->file('thumbail'));
             } elseif (!isset($validatedData['thumbail'])) {
                 unset($validatedData['thumbail']);
             }
@@ -182,7 +189,7 @@ class ProductController extends Controller
             if ($request->hasFile('product_images')) {
                 $productImages = [];
                 foreach ($request->file('product_images') as $image) {
-                    $filename = $image->store('product_images', 'public');
+                    $filename = $this->imageService->processProductImage($image);
                     $productImages[] = $filename;
                 }
                 $validatedData['product_images'] = $productImages;
