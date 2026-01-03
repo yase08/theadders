@@ -40,7 +40,7 @@ class ImageService
     }
 
     /**
-     * Process and store product image
+     * Process and store single product image
      * Resizes to max 1920x1920 and compresses to max 10MB
      *
      * @param UploadedFile $file
@@ -54,6 +54,38 @@ class ImageService
             self::PRODUCT_IMAGE_MAX_HEIGHT,
             self::PRODUCT_IMAGE_MAX_SIZE
         );
+    }
+
+    /**
+     * Process multiple product images with total size budget
+     * Total of all images will not exceed PRODUCT_IMAGE_MAX_SIZE (10MB)
+     *
+     * @param array<UploadedFile> $files Array of uploaded files
+     * @return array<string> Array of storage paths
+     */
+    public function processProductImages(array $files): array
+    {
+        $fileCount = count($files);
+        
+        if ($fileCount === 0) {
+            return [];
+        }
+
+        // Calculate size budget per image
+        $sizePerImage = (int) floor(self::PRODUCT_IMAGE_MAX_SIZE / $fileCount);
+        
+        $processedPaths = [];
+        
+        foreach ($files as $file) {
+            $processedPaths[] = $this->processImage(
+                $file,
+                self::PRODUCT_IMAGE_MAX_WIDTH,
+                self::PRODUCT_IMAGE_MAX_HEIGHT,
+                $sizePerImage
+            );
+        }
+        
+        return $processedPaths;
     }
 
     /**

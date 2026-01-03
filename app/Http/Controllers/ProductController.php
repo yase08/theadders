@@ -44,12 +44,7 @@ class ProductController extends Controller
 
             
             if ($request->hasFile('product_images')) {
-                $productImages = [];
-                foreach ($request->file('product_images') as $image) {
-                    $filename = $this->imageService->processProductImage($image);
-                    $productImages[] = $filename;
-                }
-                $validatedData['product_images'] = $productImages;
+                $validatedData['product_images'] = $this->imageService->processProductImages($request->file('product_images'));
             }
 
             $product = $this->productCategoryInterface->storeProduct($validatedData);
@@ -187,12 +182,7 @@ class ProductController extends Controller
 
             
             if ($request->hasFile('product_images')) {
-                $productImages = [];
-                foreach ($request->file('product_images') as $image) {
-                    $filename = $this->imageService->processProductImage($image);
-                    $productImages[] = $filename;
-                }
-                $validatedData['product_images'] = $productImages;
+                $validatedData['product_images'] = $this->imageService->processProductImages($request->file('product_images'));
             } elseif (!isset($validatedData['product_images'])) {
                 unset($validatedData['product_images']);
             }
