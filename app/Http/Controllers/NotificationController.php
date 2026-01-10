@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Services\FirebaseService;
 use App\Classes\ApiResponseClass;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
@@ -23,10 +24,8 @@ class NotificationController extends Controller
     }
 
     try {
-
       if (is_null($notification->read_at)) {
         $notification->update(['read_at' => now()]);
-  
         $this->firebaseService->syncUnreadNotificationCount(auth()->id());
       }
 
@@ -37,3 +36,4 @@ class NotificationController extends Controller
     }
   }
 }
+

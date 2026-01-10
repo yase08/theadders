@@ -55,6 +55,7 @@ class ExchangeController extends Controller
           [
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_request',
+            'sender_id' => (string) auth()->id(),
             'user_id' => $receiver->users_id,
             'requester_id' => $exchange->user_id,
             'receiver_id' => $exchange->to_user_id,
@@ -117,12 +118,12 @@ class ExchangeController extends Controller
           [
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_approved',
+            'sender_id' => (string) auth()->id(),
             'user_id' => $requester->users_id,
             'requester_id' => $exchange->user_id,
             'receiver_id' => $exchange->to_user_id,
             'requester_product_id' => $exchange->product_id,
             'receiver_product_id' => $exchange->to_product_id,
-
           ]
         );
       }
@@ -159,6 +160,7 @@ class ExchangeController extends Controller
           [
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_declined',
+            'sender_id' => (string) auth()->id(),
             'user_id' => $requester->users_id,
             'requester_id' => $exchange->user_id,
             'receiver_id' => $exchange->to_user_id,
@@ -274,6 +276,7 @@ class ExchangeController extends Controller
           [
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_completed',
+            'sender_id' => (string) auth()->id(),
             'user_id' => $otherUser->users_id,
             'requester_id' => $exchange->user_id,
             'receiver_id' => $exchange->to_user_id,
@@ -320,6 +323,7 @@ class ExchangeController extends Controller
           [
             'exchange_id' => $exchange->exchange_id,
             'type' => 'exchange_cancelled',
+            'sender_id' => (string) auth()->id(),
             'user_id' => $otherUser->users_id,
             'requester_id' => $exchange->user_id,
             'receiver_id' => $exchange->to_user_id,
