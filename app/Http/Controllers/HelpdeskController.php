@@ -97,4 +97,21 @@ class HelpdeskController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function getWelcome()
+    {
+        try {
+            $welcomeArticles = \App\Models\HelpdeskArticle::where('type', 'welcome')
+                ->where('is_active', true)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            return response()->json([
+                'data' => $welcomeArticles,
+                'message' => 'success'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
 }

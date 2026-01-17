@@ -132,6 +132,7 @@ Route::prefix('helpdesk')->group(function () {
     Route::get('/articles/{id}', [HelpdeskController::class, 'getArticle']);
     Route::get('/categories/{id}/articles', [HelpdeskController::class, 'getArticlesByCategory']);
     Route::get('/navigation', [HelpdeskController::class, 'getNavigation']);
+    Route::get('/welcome', [HelpdeskController::class, 'getWelcome']);
 });
 
 // Inbox Onboarding routes
