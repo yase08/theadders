@@ -101,7 +101,9 @@ class HelpdeskController extends Controller
     public function getWelcome()
     {
         try {
-            $welcomeArticles = \App\Models\HelpdeskArticle::where('type', 'welcome')
+            $welcomeArticles = \App\Models\HelpdeskArticle::whereHas('category', function($query) {
+                    $query->where('title', 'Welcome');
+                })
                 ->where('is_active', true)
                 ->orderBy('created_at', 'desc')
                 ->get();
