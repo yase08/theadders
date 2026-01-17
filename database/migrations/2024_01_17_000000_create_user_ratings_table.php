@@ -34,7 +34,7 @@ class CreateUserRatingsTable extends Migration
                   ->onDelete('cascade');
 
             $table->unique(['rater_user_id', 'rated_user_id', 'exchange_id'], 'unique_user_rating');
-        })
+        });
 
     }
 

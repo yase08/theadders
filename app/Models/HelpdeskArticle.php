@@ -15,6 +15,7 @@ class HelpdeskArticle extends Model
         'category_id',
         'title',
         'content',
+        'thumbnail',
         'type',
         'video_url',
         'link_url',
