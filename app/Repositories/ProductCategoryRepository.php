@@ -84,58 +84,57 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function getProducts(array $filters)
     {
-        $completedRequesterProductIds = Exchange::where('status', 'Completed')->pluck('product_id');
-        $completedReceiverProductIds = Exchange::where('status', 'Completed')->pluck('to_product_id');
-        $allCompletedProductIds = $completedRequesterProductIds->merge($completedReceiverProductIds)->unique();
+        $allCompletedProductIds = Exchange::where('status', 'Completed')
+            ->selectRaw('DISTINCT product_id as id')
+            ->union(
+                Exchange::where('status', 'Completed')
+                    ->selectRaw('DISTINCT to_product_id as id')
+            )
+            ->pluck('id');
 
-        $query = User::with([
-            'products' => function ($query) use ($filters, $allCompletedProductIds) {
-                $query
-                    ->filter([
-                        'category_id' => $filters['category_id'] ?? null,
-                        'category_sub_id' => $filters['category_sub_id'] ?? null,
-                        'search' => $filters['search'] ?? null,
-                        'sort' => $filters['sort'] ?? null,
-                        'size' => $filters['size'] ?? null,
-                        'price_range' => $filters['price_range'] ?? null,
-                    ])
-                    ->whereNotIn('product_id', $allCompletedProductIds)
-                    ->withCount([
-                        'ratings as total_ratings' => function ($q) {
-                            $q->where('status', 1);
-                        },
-                        'productLoves as is_wishlist' => function ($q) {
-                            $q->where('user_id_author', auth()->id())->where('status', 1);
-                        }
-                    ])
-                    ->withAvg([
-                        'ratings as average_rating' => function ($q) {
-                            $q->where('status', 1);
-                        }
-                    ], 'rating');
-            },
-            'products.category',
-            'products.categorySub'
-        ])
-            ->whereHas('products', function ($query) use ($filters, $allCompletedProductIds) {
-                $query->filter([
-                    'category_id' => $filters['category_id'] ?? null,
-                    'category_sub_id' => $filters['category_sub_id'] ?? null,
-                    'search' => $filters['search'] ?? null,
-                ])
-                    ->whereNotIn('product_id', $allCompletedProductIds);
-            })
-            ->where('users_id', '!=', auth()->id());
+        $query = Product::select([
+                'product_id', 'category_id', 'category_sub_id', 'product_name', 
+                'description', 'thumbail', 'price', 'item_codition', 'author', 'created'
+            ])
+            ->with([
+                'category:category_id,category_name,icon',
+                'categorySub:category_sub_id,category_name',
+                'user:users_id,fullname,avatar'
+            ])
+            ->withCount([
+                'ratings as total_ratings' => function ($q) {
+                    $q->where('status', 1);
+                },
+                'productLoves as is_wishlist' => function ($q) {
+                    $q->where('user_id_author', auth()->id())->where('status', 1);
+                }
+            ])
+            ->withAvg([
+                'ratings as average_rating' => function ($q) {
+                    $q->where('status', 1);
+                }
+            ], 'rating')
+            ->where('author', '!=', auth()->id())
+            ->whereNotIn('product_id', $allCompletedProductIds)
+            ->filter([
+                'category_id' => $filters['category_id'] ?? null,
+                'category_sub_id' => $filters['category_sub_id'] ?? null,
+                'search' => $filters['search'] ?? null,
+                'sort' => $filters['sort'] ?? null,
+                'size' => $filters['size'] ?? null,
+                'price_range' => $filters['price_range'] ?? null,
+            ]);
 
-        $result = isset($filters['per_page']) ? $query->paginate($filters['per_page']) : $query->get();
+        $result = isset($filters['per_page']) 
+            ? $query->paginate($filters['per_page']) 
+            : $query->get();
 
+        $items = isset($filters['per_page']) ? $result->items() : $result;
         $grouped = [];
-
-        foreach ($result as $user) {
-            foreach ($user->products as $product) {
-                $categoryName = $product->category->category_name ?? 'Others';
-                $grouped[$categoryName][] = $product;
-            }
+        
+        foreach ($items as $product) {
+            $categoryName = $product->category->category_name ?? 'Others';
+            $grouped[$categoryName][] = $product;
         }
 
         return $grouped;
