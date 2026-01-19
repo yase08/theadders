@@ -31,6 +31,17 @@ class ExchangeRepository implements ExchangeInterface
         throw new \Exception('Sorry, your item is not available within this price range.');
       }
 
+      $completedExchange = Exchange::where('status', 'Completed')
+        ->where(function ($q) use ($productId, $toProductId) {
+          $q->whereIn('product_id', [$productId, $toProductId])
+            ->orWhereIn('to_product_id', [$productId, $toProductId]);
+        })
+        ->exists();
+
+      if ($completedExchange) {
+        throw new \Exception('One or both products have already been exchanged and cannot be used again.');
+      }
+
       $existingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
 
         $query->where('user_id', $authUserId)
@@ -228,17 +239,54 @@ class ExchangeRepository implements ExchangeInterface
         throw new \Exception('Exchange must be approved first');
       }
 
-      $userId = auth()->id(); 
+      $userId = auth()->id();
       if ($userId !== $exchange->user_id && $userId !== $exchange->to_user_id) {
         throw new \Exception('Unauthorized action');
       }
 
-      $exchange->update([
-        'status' => 'Completed',
-        'completed_at' => now()
-      ]);
+      $isRequester = ($userId === $exchange->user_id);
+      $isReceiver = ($userId === $exchange->to_user_id);
 
-      return $exchange->fresh(['requesterProduct', 'receiverProduct']);
+      if ($isRequester && !$exchange->requester_confirmed) {
+        $exchange->requester_confirmed = true;
+      } elseif ($isReceiver && !$exchange->receiver_confirmed) {
+        $exchange->receiver_confirmed = true;
+      } else {
+        throw new \Exception('You have already confirmed this exchange. Waiting for the other party.');
+      }
+
+      $cancelledExchanges = [];
+
+      if ($exchange->requester_confirmed && $exchange->receiver_confirmed) {
+        $exchange->status = 'Completed';
+        $exchange->completed_at = now();
+
+        $productIds = [$exchange->product_id, $exchange->to_product_id];
+        
+        $otherExchanges = Exchange::where('exchange_id', '!=', $exchange->exchange_id)
+          ->whereIn('status', ['Submission', 'Approve'])
+          ->where(function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds)
+              ->orWhereIn('to_product_id', $productIds);
+          })
+          ->with(['requester', 'receiver', 'requesterProduct', 'receiverProduct'])
+          ->get();
+
+        foreach ($otherExchanges as $otherExchange) {
+          $otherExchange->update([
+            'status' => 'Cancelled',
+            'completed_at' => now()
+          ]);
+          $cancelledExchanges[] = $otherExchange;
+        }
+      }
+
+      $exchange->save();
+
+      $result = $exchange->fresh(['requesterProduct', 'receiverProduct']);
+      $result->cancelled_exchanges = $cancelledExchanges;
+
+      return $result;
     } catch (\Exception $e) {
       throw new \Exception('Unable to complete exchange: ' . $e->getMessage());
     }

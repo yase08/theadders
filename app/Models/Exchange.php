@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\UserRating; // Make sure this is imported
+use App\Models\UserRating;
 
 class Exchange extends Model
 {
   public const CREATED_AT = 'created';
-  protected $table = 'trs_exchange'; // Assuming your table name is trs_exchange
+  protected $table = 'trs_exchange'; 
   protected $primaryKey = 'exchange_id';
   public $timestamps = false;
   protected $dates = [
@@ -21,6 +21,8 @@ class Exchange extends Model
     'user_id',
     'to_user_id',
     'status',
+    'requester_confirmed',
+    'receiver_confirmed',
     'author',
     'created',
     'completed_at'
@@ -60,18 +62,12 @@ class Exchange extends Model
     });
   }
 
-  /**
-   * Get the ratings given by the requester of this exchange.
-   */
   public function ratingsGivenByRequester()
   {
       return $this->hasMany(UserRating::class, 'exchange_id', 'exchange_id')
                   ->whereColumn('rater_user_id', 'trs_exchange.user_id');
   }
 
-  /**
-   * Get the ratings given by the receiver of this exchange.
-   */
   public function ratingsGivenByReceiver()
   {
       return $this->hasMany(UserRating::class, 'exchange_id', 'exchange_id')

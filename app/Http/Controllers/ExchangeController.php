@@ -261,34 +261,82 @@ class ExchangeController extends Controller
 
       DB::commit();
 
-
       $otherUserId = auth()->id() === $exchange->user_id
         ? $exchange->to_user_id
         : $exchange->user_id;
 
       $otherUser = User::find($otherUserId);
 
+      $isFullyCompleted = ($exchange->status === 'Completed');
+
       if ($otherUser && $otherUser->fcm_token) {
-        $this->firebaseService->sendNotification(
-          $otherUser->fcm_token,
-          "Exchange Completed",
-          "The exchange has been completed by " . auth()->user()->fullname,
-          [
-            'exchange_id' => $exchange->exchange_id,
-            'type' => 'exchange_completed',
-            'sender_id' => (string) auth()->id(),
-            'user_id' => $otherUser->users_id,
-            'requester_id' => $exchange->user_id,
-            'receiver_id' => $exchange->to_user_id,
-            'requester_product_id' => $exchange->product_id,
-            'receiver_product_id' => $exchange->to_product_id,
-          ]
-        );
+        if ($isFullyCompleted) {
+          $this->firebaseService->sendNotification(
+            $otherUser->fcm_token,
+            "Exchange Completed",
+            "The exchange with " . auth()->user()->fullname . " has been completed! Both parties have confirmed.",
+            [
+              'exchange_id' => $exchange->exchange_id,
+              'type' => 'exchange_completed',
+              'sender_id' => (string) auth()->id(),
+              'user_id' => $otherUser->users_id,
+              'requester_id' => $exchange->user_id,
+              'receiver_id' => $exchange->to_user_id,
+              'requester_product_id' => $exchange->product_id,
+              'receiver_product_id' => $exchange->to_product_id,
+              'is_fully_completed' => true,
+            ]
+          );
+        } else {
+          $this->firebaseService->sendNotification(
+            $otherUser->fcm_token,
+            "Exchange Confirmation Needed",
+            auth()->user()->fullname . " has confirmed the exchange. Please confirm on your end to complete.",
+            [
+              'exchange_id' => $exchange->exchange_id,
+              'type' => 'exchange_pending_confirmation',
+              'sender_id' => (string) auth()->id(),
+              'user_id' => $otherUser->users_id,
+              'requester_id' => $exchange->user_id,
+              'receiver_id' => $exchange->to_user_id,
+              'requester_product_id' => $exchange->product_id,
+              'receiver_product_id' => $exchange->to_product_id,
+              'is_fully_completed' => false,
+            ]
+          );
+        }
+      }
+
+      if ($isFullyCompleted && !empty($exchange->cancelled_exchanges)) {
+        foreach ($exchange->cancelled_exchanges as $cancelledExchange) {
+          $usersToNotify = [
+            $cancelledExchange->requester,
+            $cancelledExchange->receiver
+          ];
+
+          foreach ($usersToNotify as $user) {
+            if ($user && $user->fcm_token) {
+              $this->firebaseService->sendNotification(
+                $user->fcm_token,
+                "Exchange Auto-Cancelled",
+                "Your exchange request has been cancelled because one of the products was exchanged with another user.",
+                [
+                  'exchange_id' => $cancelledExchange->exchange_id,
+                  'type' => 'exchange_auto_cancelled',
+                  'requester_product_id' => $cancelledExchange->product_id,
+                  'receiver_product_id' => $cancelledExchange->to_product_id,
+                ]
+              );
+            }
+          }
+        }
       }
 
       return response()->json([
         'message' => 'success',
-        'exchange' => $exchange
+        'exchange' => $exchange,
+        'is_fully_completed' => $isFullyCompleted,
+        'cancelled_count' => count($exchange->cancelled_exchanges ?? [])
       ], 200);
     } catch (\Throwable $th) {
       DB::rollBack();

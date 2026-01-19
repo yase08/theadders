@@ -15,7 +15,6 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next)
     {
         try {
-            // Ambil token dari request dan autentikasi user
             $user = JWTAuth::parseToken()->authenticate();
         } catch (TokenExpiredException $e) {
             return response()->json([
@@ -34,7 +33,6 @@ class JwtMiddleware
             ], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Jika token valid, lanjutkan request
         return $next($request);
     }
 }
