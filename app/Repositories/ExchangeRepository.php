@@ -277,6 +277,8 @@ class ExchangeRepository implements ExchangeInterface
             'status' => 'Cancelled',
             'completed_at' => now()
           ]);
+          
+          $this->firebaseService->deleteChatByExchange($otherExchange);
           $cancelledExchanges[] = $otherExchange;
         }
       }

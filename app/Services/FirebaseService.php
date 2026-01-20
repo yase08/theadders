@@ -142,7 +142,7 @@ class FirebaseService
             }
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Exception $e) { 
             \Log::error('Firebase error: ' . $e->getMessage());
             return false;
         }
@@ -513,4 +513,28 @@ class FirebaseService
             Log::error("Failed to sync unread notification count for user {$userId}: " . $e->getMessage());
         }
     }
+
+    public function deleteChatByExchange(\App\Models\Exchange $exchange): void
+    {
+        try {
+            $userId1 = $exchange->user_id;
+            $userId2 = $exchange->to_user_id;
+            $exchangeId = $exchange->exchange_id;
+
+            $chatKey = $this->getChatKey($userId1, $userId2, $exchangeId);
+
+            $updates = [
+                'chat_rooms/' . $userId1 . '/' . $chatKey => null,
+                'chat_rooms/' . $userId2 . '/' . $chatKey => null,
+                'chats/' . $chatKey => null,
+            ];
+
+            $this->database->getReference()->update($updates);
+
+            Log::info("Chat Firebase deleted for cancelled exchange {$exchangeId}");
+        } catch (\Exception $e) {
+            Log::error("Failed to delete chat for exchange {$exchangeId}: " . $e->getMessage());
+        }
+    }
+
 }

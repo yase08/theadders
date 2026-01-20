@@ -33,6 +33,10 @@ class AuthController extends Controller
             if ($this->userRepositoryInterface->getUserByEmail($req->email)) {
                 return ApiResponseClass::sendResponse(null, "Email already exists", 400);
             }
+            
+            if ($this->userRepositoryInterface->getUserByPhone($req->phone)) {
+                return ApiResponseClass::sendResponse(null, "Phone number already exists", 400);
+            }
 
             $payloadUser = [
                 'fullname' => $req->fullname,
