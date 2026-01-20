@@ -261,6 +261,8 @@ class ExchangeRepository implements ExchangeInterface
         $exchange->status = 'Completed';
         $exchange->completed_at = now();
 
+        $this->firebaseService->updateLatestProductTimestamp();
+
         $productIds = [$exchange->product_id, $exchange->to_product_id];
         
         $otherExchanges = Exchange::where('exchange_id', '!=', $exchange->exchange_id)
