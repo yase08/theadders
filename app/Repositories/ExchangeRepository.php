@@ -78,12 +78,10 @@ class ExchangeRepository implements ExchangeInterface
               ->where('product_id', $toProductId)
               ->where('to_product_id', $productId);
           })
-          ->where('status', '!=', 'Approve')
-          ->latest()
+          ->where('status', 'Submission')
           ->first();
 
         if ($pendingExchange) {
-
           throw new \Exception('There is already a pending exchange request for these products. Please wait for it to be processed.');
         }
 
