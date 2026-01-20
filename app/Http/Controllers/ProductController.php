@@ -147,6 +147,8 @@ class ProductController extends Controller
     {
         try {
             $this->productCategoryInterface->deleteProduct($id);
+
+            $this->firebaseService->updateLatestProductTimestamp();
             
             return response()->json([
                 'success' => true,
