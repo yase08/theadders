@@ -251,6 +251,29 @@ class FirebaseService
         }
     }
 
+    public function updateChatRoomConfirmationStatus(\App\Models\Exchange $exchange): void
+    {
+        try {
+            $requesterId = $exchange->user_id;
+            $receiverId = $exchange->to_user_id;
+            $chatKey = $this->getChatKey($requesterId, $receiverId, $exchange->exchange_id);
+
+            $updates = [
+                'chat_rooms/' . $requesterId . '/' . $chatKey . '/requester_confirmed' => (bool) $exchange->requester_confirmed,
+                'chat_rooms/' . $requesterId . '/' . $chatKey . '/receiver_confirmed' => (bool) $exchange->receiver_confirmed,
+                'chat_rooms/' . $requesterId . '/' . $chatKey . '/status' => $exchange->status,
+                'chat_rooms/' . $receiverId . '/' . $chatKey . '/requester_confirmed' => (bool) $exchange->requester_confirmed,
+                'chat_rooms/' . $receiverId . '/' . $chatKey . '/receiver_confirmed' => (bool) $exchange->receiver_confirmed,
+                'chat_rooms/' . $receiverId . '/' . $chatKey . '/status' => $exchange->status,
+            ];
+
+            $this->database->getReference()->update($updates);
+            Log::info("Updated confirmation status in Firebase for exchange: " . $exchange->exchange_id);
+        } catch (\Exception $e) {
+            Log::error("Failed to update chat room confirmation status: " . $e->getMessage());
+        }
+    }
+
     public function storeMessage($data)
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
