@@ -161,6 +161,11 @@ class ProductCategoryRepository implements ProductCategoryInterface
             ? $query->paginate($filters['per_page'])
             : $query->get();
 
+        $products = isset($filters['per_page']) ? $result->getCollection() : $result;
+        $products->each(function ($product) {
+            $product->is_in_exchange = $this->isProductInActiveExchange($product->product_id);
+        });
+
         return $result;
     }
 
@@ -239,14 +244,13 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 ->where('product_id', $productId)
                 ->firstOrFail();
 
-
             $ratings = $product->ratings()->where('status', 1)->get();
             $product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
             $product->total_ratings = $ratings->count();
 
+            $product->is_in_exchange = $this->isProductInActiveExchange($productId);
 
             $product->increment('view_count');
-
 
             $this->trackProductView($product->product_id);
 
