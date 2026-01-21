@@ -49,21 +49,19 @@ class ExchangeRepository implements ExchangeInterface
       }
 
       $existingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
-
-        $query->where('user_id', $authUserId)
-          ->where('to_user_id', $targetUserId)
-          ->where('product_id', $productId)
-          ->where('to_product_id', $toProductId);
-      })
-        ->orWhere(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
-
-          $query->where('user_id', $targetUserId)
+        $query->where(function ($q) use ($authUserId, $targetUserId, $productId, $toProductId) {
+          $q->where('user_id', $authUserId)
+            ->where('to_user_id', $targetUserId)
+            ->where('product_id', $productId)
+            ->where('to_product_id', $toProductId);
+        })->orWhere(function ($q) use ($authUserId, $targetUserId, $productId, $toProductId) {
+          $q->where('user_id', $targetUserId)
             ->where('to_user_id', $authUserId)
             ->where('product_id', $toProductId)
             ->where('to_product_id', $productId);
-        })
+        });
+      })
         ->where('status', 'Approve')
-        ->whereNotIn('status', ['Cancelled', 'Not Approve', 'Completed'])
         ->first();
 
 
@@ -74,17 +72,18 @@ class ExchangeRepository implements ExchangeInterface
       } else {
 
         $pendingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
-          $query->where('user_id', $authUserId)
-            ->where('to_user_id', $targetUserId)
-            ->where('product_id', $productId)
-            ->where('to_product_id', $toProductId);
-        })
-          ->orWhere(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
-            $query->where('user_id', $targetUserId)
+          $query->where(function ($q) use ($authUserId, $targetUserId, $productId, $toProductId) {
+            $q->where('user_id', $authUserId)
+              ->where('to_user_id', $targetUserId)
+              ->where('product_id', $productId)
+              ->where('to_product_id', $toProductId);
+          })->orWhere(function ($q) use ($authUserId, $targetUserId, $productId, $toProductId) {
+            $q->where('user_id', $targetUserId)
               ->where('to_user_id', $authUserId)
               ->where('product_id', $toProductId)
               ->where('to_product_id', $productId);
-          })
+          });
+        })
           ->where('status', 'Submission')
           ->first();
 
