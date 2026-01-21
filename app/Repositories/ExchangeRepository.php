@@ -63,13 +63,14 @@ class ExchangeRepository implements ExchangeInterface
             ->where('to_product_id', $productId);
         })
         ->where('status', 'Approve')
+        ->whereNotIn('status', ['Cancelled', 'Not Approve', 'Completed'])
         ->first();
 
 
       if ($existingExchange) {
         $exchange = $existingExchange;
 
-        \Log::info('Using existing approved exchange: ' . $existingExchange->exchange_id);
+        \Log::info('Using existing approved exchange: ' . $existingExchange->exchange_id . ', status=' . $existingExchange->status);
       } else {
 
         $pendingExchange = Exchange::where(function ($query) use ($authUserId, $targetUserId, $productId, $toProductId) {
@@ -183,7 +184,6 @@ class ExchangeRepository implements ExchangeInterface
       \Log::info('=== GET INCOMING EXCHANGES DEBUG ===');
       \Log::info('Current User ID: ' . $userId);
 
-      // First check all exchanges for this user
       $allExchanges = Exchange::where('to_user_id', $userId)->get();
       \Log::info('Total exchanges where to_user_id=' . $userId . ': ' . $allExchanges->count());
       foreach ($allExchanges as $ex) {
