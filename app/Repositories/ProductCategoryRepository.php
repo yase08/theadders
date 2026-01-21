@@ -283,9 +283,11 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 ->where('author', auth()->id())
                 ->firstOrFail();
 
+            if ($this->isProductInActiveExchange($productId)) {
+                throw new \Exception('Cannot delete product that is currently in an exchange process.');
+            }
 
             ProductImage::where('product_id', $productId)->delete();
-
 
             $product->delete();
 
@@ -301,6 +303,10 @@ class ProductCategoryRepository implements ProductCategoryInterface
             $product = Product::where('product_id', $productId)
                 ->where('author', auth()->id())
                 ->firstOrFail();
+
+            if ($this->isProductInActiveExchange($productId)) {
+                throw new \Exception('Cannot edit product that is currently in an exchange process.');
+            }
 
             $updateData = [
                 'category_id' => $productData['category_id'] ?? $product->category_id,
@@ -339,5 +345,15 @@ class ProductCategoryRepository implements ProductCategoryInterface
         } catch (\Exception $e) {
             throw new \Exception('Unable to update product: ' . $e->getMessage());
         }
+    }
+
+    private function isProductInActiveExchange($productId): bool
+    {
+        return Exchange::whereIn('status', ['Submission', 'Approve'])
+            ->where(function ($q) use ($productId) {
+                $q->where('product_id', $productId)
+                  ->orWhere('to_product_id', $productId);
+            })
+            ->exists();
     }
 }
