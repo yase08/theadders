@@ -269,6 +269,9 @@ class ExchangeController extends Controller
 
       $isFullyCompleted = ($exchange->status === 'Completed');
 
+      // Update Firebase chat room with confirmation status
+      $this->firebaseService->updateChatRoomConfirmationStatus($exchange);
+
       if ($otherUser && $otherUser->fcm_token) {
         if ($isFullyCompleted) {
           $this->firebaseService->sendNotification(

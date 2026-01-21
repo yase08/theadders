@@ -186,36 +186,40 @@ class FirebaseService
 
 
             $roomDataForRequester = [
-                'exchange_id'       => $exchange->exchange_id,
-                'status'            => 'Approve',
-                'user'              => [
+                'exchange_id'           => $exchange->exchange_id,
+                'status'                => 'Approve',
+                'requester_confirmed'   => $exchange->requester_confirmed ?? false,
+                'receiver_confirmed'    => $exchange->receiver_confirmed ?? false,
+                'user'                  => [
                     'users_id'  => $receiver->users_id,
                     'fullname'  => $receiver->fullname,
                     'avatar'    => $receiver->avatar,
                 ],
-                'last_message'      => 'Belum ada pesan',
-                'timestamp'         => now()->timestamp * 1000,
-                'unread_count'      => 0,
-                'has_rated'         => null,
-                'requester_product' => $exchange->requesterProduct,
-                'receiver_product'  => $exchange->receiverProduct,
+                'last_message'          => 'Belum ada pesan',
+                'timestamp'             => now()->timestamp * 1000,
+                'unread_count'          => 0,
+                'has_rated'             => null,
+                'requester_product'     => $exchange->requesterProduct,
+                'receiver_product'      => $exchange->receiverProduct,
             ];
 
 
             $roomDataForReceiver = [
-                'exchange_id'       => $exchange->exchange_id,
-                'status'            => 'Approve',
-                'user'              => [
+                'exchange_id'           => $exchange->exchange_id,
+                'status'                => 'Approve',
+                'requester_confirmed'   => $exchange->requester_confirmed ?? false,
+                'receiver_confirmed'    => $exchange->receiver_confirmed ?? false,
+                'user'                  => [
                     'users_id'  => $requester->users_id,
                     'fullname'  => $requester->fullname,
                     'avatar'    => $requester->avatar,
                 ],
-                'last_message'      => 'Belum ada pesan',
-                'timestamp'         => now()->timestamp * 1000,
-                'unread_count'      => 0,
-                'has_rated'         => null,
-                'requester_product' => $exchange->requesterProduct,
-                'receiver_product'  => $exchange->receiverProduct,
+                'last_message'          => 'Belum ada pesan',
+                'timestamp'             => now()->timestamp * 1000,
+                'unread_count'          => 0,
+                'has_rated'             => null,
+                'requester_product'     => $exchange->requesterProduct,
+                'receiver_product'      => $exchange->receiverProduct,
             ];
 
 

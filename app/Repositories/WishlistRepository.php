@@ -53,8 +53,18 @@ class WishlistRepository implements WishlistInterface
         try {
             $wishlist = ProductLove::where('user_id_author', auth()->id())
                 ->where('status', 1)
-                ->with(['product.category', 'product.categorySub', 'product.ratings'])
-                
+                ->whereHas('product') 
+                ->with([
+                    'product' => function ($query) {
+                        $query->with(['category', 'categorySub'])
+                            ->withCount(['ratings' => function ($q) {
+                                $q->where('status', 1);
+                            }])
+                            ->withAvg(['ratings' => function ($q) {
+                                $q->where('status', 1);
+                            }], 'rating');
+                    }
+                ])
                 ->when($search, function ($query, $search) {
                     $query->whereHas('product', function ($q) use ($search) {
                         $q->where('product_name', 'like', '%' . $search . '%');
@@ -62,17 +72,11 @@ class WishlistRepository implements WishlistInterface
                 })
                 ->get();
 
-            
+            // Map to add computed fields
             $wishlist->each(function ($item) {
-                
                 if ($item->product) {
-                    $ratings = $item->product->ratings()->where('status', 1)->get();
-                    $item->product->average_rating = round($ratings->avg('rating'), 1) ?? 0;
-                    $item->product->total_ratings = $ratings->count();
-                } else {
-                    
-                    $item->product->average_rating = 0;
-                    $item->product->total_ratings = 0;
+                    $item->product->average_rating = round($item->product->ratings_avg_rating ?? 0, 1);
+                    $item->product->total_ratings = $item->product->ratings_count ?? 0;
                 }
             });
 

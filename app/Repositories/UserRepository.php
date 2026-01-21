@@ -15,7 +15,7 @@ class UserRepository implements UserRepositoryInterface
             'email' => $dataUser['email'],
             'phone' => $dataUser['phone'],
             'status' => $dataUser['status'],
-            'password' => $dataPwUser['password']  // Store password directly in users table
+            'password' => $dataPwUser['password']  
         ]);
         
         return $user->fresh();
@@ -23,7 +23,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function getUserByEmail(string $email)
     {
-        return User::where('email', $email)->first();  // No need to join with pw_users
+        return User::where('email', $email)->first();  
     }
 
     public function updateProfile(int $userId, array $data)

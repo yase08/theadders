@@ -27,6 +27,12 @@ class ExchangeRepository implements ExchangeInterface
       $product = Product::find($productId);
       $toProduct = Product::find($toProductId);
 
+      \Log::info('=== REQUEST EXCHANGE DEBUG ===');
+      \Log::info('Auth User ID: ' . $authUserId);
+      \Log::info('Target User ID: ' . $targetUserId);
+      \Log::info('Product ID: ' . $productId);
+      \Log::info('To Product ID: ' . $toProductId);
+
       if (!$product || !$toProduct || $product->price !== $toProduct->price) {
         throw new \Exception('Sorry, your item is not available within this price range.');
       }
@@ -94,7 +100,7 @@ class ExchangeRepository implements ExchangeInterface
           'author'        => 'system'
         ]);
 
-        \Log::info('Created new exchange request: ' . $exchange->exchange_id);
+        \Log::info('Created new exchange: ID=' . $exchange->exchange_id . ', user_id=' . $exchange->user_id . ', to_user_id=' . $exchange->to_user_id . ', status=' . $exchange->status);
       }
 
       return $exchange;
@@ -174,6 +180,16 @@ class ExchangeRepository implements ExchangeInterface
     try {
       $userId = auth()->id();
 
+      \Log::info('=== GET INCOMING EXCHANGES DEBUG ===');
+      \Log::info('Current User ID: ' . $userId);
+
+      // First check all exchanges for this user
+      $allExchanges = Exchange::where('to_user_id', $userId)->get();
+      \Log::info('Total exchanges where to_user_id=' . $userId . ': ' . $allExchanges->count());
+      foreach ($allExchanges as $ex) {
+        \Log::info('Exchange ID=' . $ex->exchange_id . ', user_id=' . $ex->user_id . ', to_user_id=' . $ex->to_user_id . ', status=' . $ex->status);
+      }
+
       $exchanges = Exchange::where('to_user_id', $userId)
         ->where('status', 'Submission')
             ->with([
@@ -198,6 +214,8 @@ class ExchangeRepository implements ExchangeInterface
         })
         ->orderBy('created', 'desc')
         ->get();
+
+      \Log::info('Filtered exchanges (status=Submission): ' . $exchanges->count());
 
       return $exchanges;
     } catch (\Exception $e) {
