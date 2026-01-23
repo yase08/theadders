@@ -88,8 +88,6 @@ class MessageController extends Controller
                     'exchange_id' => $request->exchange_id
                 ]
             ]);
-            
-            $this->firebaseService->markChatNotificationsAsRead(auth()->id(), $request->exchange_id);
 
             $messages = Message::where('exchange_id', $request->exchange_id)
                 ->where(function ($query) use ($request) {

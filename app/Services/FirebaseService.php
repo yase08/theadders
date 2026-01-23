@@ -475,7 +475,8 @@ class FirebaseService
             ]);
             Log::info('Notification saved to database for user: ' . $userId);
 
-            $this->syncUnreadNotificationCount($userId);
+            $this->incrementGlobalNotificationCount($userId); 
+            
         } catch (\Exception $e) {
             Log::error('Failed to save notification to database: ' . $e->getMessage());
         }
@@ -573,19 +574,18 @@ class FirebaseService
         }
     }
 
-    public function markChatNotificationsAsRead(int $userId, int $exchangeId): void
+    public function incrementGlobalNotificationCount(int $userId): void
     {
         try {
-            \App\Models\Notification::where('user_id', $userId)
-                ->whereNull('read_at')
-                ->where('data->exchange_id', $exchangeId)
-                ->update(['read_at' => now()]);
-
-            $this->syncUnreadNotificationCount($userId);
-
-            Log::info("Marked notifications as read for user {$userId} and exchange {$exchangeId}");
+            $this->database
+                ->getReference('user_notifications/' . $userId . '/unread_notifications_count')
+                ->set([
+                    '.sv' => ['increment' => 1]
+                ]);
+            Log::info('Incremented global unread notification count for user: ' . $userId);
         } catch (\Exception $e) {
-            Log::error("Failed to mark chat notifications as read: " . $e->getMessage());
+            Log::error('Failed to increment global notification count: ' . $e->getMessage());
         }
     }
+
 }
