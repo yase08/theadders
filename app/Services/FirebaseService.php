@@ -573,4 +573,19 @@ class FirebaseService
         }
     }
 
+    public function markChatNotificationsAsRead(int $userId, int $exchangeId): void
+    {
+        try {
+            \App\Models\Notification::where('user_id', $userId)
+                ->whereNull('read_at')
+                ->where('data->exchange_id', $exchangeId)
+                ->update(['read_at' => now()]);
+
+            $this->syncUnreadNotificationCount($userId);
+
+            Log::info("Marked notifications as read for user {$userId} and exchange {$exchangeId}");
+        } catch (\Exception $e) {
+            Log::error("Failed to mark chat notifications as read: " . $e->getMessage());
+        }
+    }
 }
