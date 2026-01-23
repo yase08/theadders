@@ -278,6 +278,15 @@ class FirebaseService
     {
         $chatKey = $this->getChatKey($data['sender']->users_id, $data['receiver']->users_id, $data['exchange_id'] ?? null);
 
+        $senderId = $data['sender']->users_id;
+        $receiverId = $data['receiver']->users_id;
+
+        $membersRef = $this->database->getReference('chats/' . $chatKey . '/members');
+        $membersRef->set([
+            $senderId => true,
+            $receiverId => true,
+        ]);
+
         $messagesRef = $this->database->getReference('chats/' . $chatKey . '/messages');
 
         $messageData = [
