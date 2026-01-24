@@ -99,7 +99,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
             ->with([
                 'category:category_id,category_name,icon',
                 'categorySub:category_sub_id,category_name',
-                'user:users_id,fullname,avatar'
+                'user:users_id,fullname,avatar,bio,created,location'
             ])
             ->withCount([
                 'ratings as total_ratings' => function ($q) {
