@@ -12,6 +12,7 @@ class ProductReport extends Model
         'product_id',
         'reporter_id',
         'reason',
+        'title',
         'description',
     ];
 

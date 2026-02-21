@@ -66,6 +66,7 @@ class ReportController extends Controller
                 'product_id'  => $id,
                 'reporter_id' => $reporterId,
                 'reason'      => $request->reason,
+                'title'       => $request->title ?? null,
                 'description' => $request->description ?? null,
             ]);
 
@@ -137,6 +138,7 @@ class ReportController extends Controller
                 'reported_user_id' => $userId,
                 'reporter_id'      => $reporterId,
                 'reason'           => $request->reason,
+                'title'            => $request->title ?? null,
                 'description'      => $request->description ?? null,
             ]);
 

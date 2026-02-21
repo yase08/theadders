@@ -12,6 +12,7 @@ class UserReport extends Model
         'reported_user_id',
         'reporter_id',
         'reason',
+        'title',
         'description',
     ];
 
