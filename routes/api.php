@@ -135,9 +135,14 @@ Route::prefix('helpdesk')->group(function () {
     Route::get('/welcome', [HelpdeskController::class, 'getWelcome']);
 });
 
-// Inbox Onboarding routes
 use App\Http\Controllers\InboxOnboardingController;
 Route::prefix('inbox-onboarding')->group(function () {
     Route::get('/slides', [InboxOnboardingController::class, 'getSlides']);
     Route::get('/slides/{id}', [InboxOnboardingController::class, 'getSlide']);
+});
+
+use App\Http\Controllers\ReportController;
+Route::middleware(JwtMiddleware::class)->group(function () {
+    Route::get('/report-reasons', [ReportController::class, 'getReportReasons']);
+    Route::post('/products/{id}/report', [ReportController::class, 'reportProduct']);
 });
