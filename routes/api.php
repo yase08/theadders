@@ -143,6 +143,8 @@ Route::prefix('inbox-onboarding')->group(function () {
 
 use App\Http\Controllers\ReportController;
 Route::middleware(JwtMiddleware::class)->group(function () {
-    Route::get('/report-reasons', [ReportController::class, 'getReportReasons']);
+    Route::get('/report-product-reasons', [ReportController::class, 'getProductReportReasons']);
     Route::post('/products/{id}/report', [ReportController::class, 'reportProduct']);
+    Route::get('/report-user-reasons', [ReportController::class, 'getUserReportReasons']);
+    Route::post('/users/{userId}/report', [ReportController::class, 'reportUser']);
 });
