@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('product_reports', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
+            $table->unsignedInteger('product_id');
             $table->unsignedBigInteger('reporter_id');
             $table->string('reason');
             $table->text('description')->nullable();
