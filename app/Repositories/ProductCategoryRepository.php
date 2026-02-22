@@ -88,7 +88,9 @@ class ProductCategoryRepository implements ProductCategoryInterface
         try {
             if ($token = \Tymon\JWTAuth\Facades\JWTAuth::getToken()) {
                 $user = \Tymon\JWTAuth\Facades\JWTAuth::authenticate($token);
-                $userId = $user ? clone $user->users_id : null;
+                if ($user) {
+                    $userId = $user->users_id;
+                }
             }
         } catch (\Exception $e) {
             
