@@ -6,6 +6,7 @@ interface UserRepositoryInterface
 {
     public function signUp(array $dataUser, array $dataPwUser);
     public function getUserByEmail(string $email);
+    public function getUserByPhone(string $phone);
     public function updateProfile(int $userId, array $data);
     public function getUserById(int $userId);
 }
