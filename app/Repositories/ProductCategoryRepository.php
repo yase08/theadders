@@ -84,13 +84,31 @@ class ProductCategoryRepository implements ProductCategoryInterface
 
     public function getProducts(array $filters)
     {
+        $userId = null;
+        try {
+            if ($token = \Tymon\JWTAuth\Facades\JWTAuth::getToken()) {
+                $user = \Tymon\JWTAuth\Facades\JWTAuth::authenticate($token);
+                $userId = $user ? clone $user->users_id : null;
+            }
+        } catch (\Exception $e) {
+            
+        }
+
         $allCompletedProductIds = Exchange::where('status', 'Completed')
             ->selectRaw('DISTINCT product_id as id')
             ->union(
                 Exchange::where('status', 'Completed')
                     ->selectRaw('DISTINCT to_product_id as id')
             )
-            ->pluck('id');
+            ->pluck('id')->toArray();
+
+       
+        if ($userId) {
+            $reportedProductIds = \App\Models\ProductReport::where('reporter_id', $userId)
+                ->pluck('product_id')->toArray();
+            
+            $allCompletedProductIds = array_unique(array_merge($allCompletedProductIds, $reportedProductIds));
+        }
 
         $query = Product::select([
                 'product_id', 'category_id', 'category_sub_id', 'product_name', 
@@ -105,18 +123,29 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'ratings as total_ratings' => function ($q) {
                     $q->where('status', 1);
                 },
-                'productLoves as is_wishlist' => function ($q) {
-                    $q->where('user_id_author', auth()->id())->where('status', 1);
+                'productLoves as is_wishlist' => function ($q) use ($userId) {
+                    if ($userId) {
+                        $q->where('user_id_author', $userId)->where('status', 1);
+                    } else {
+                        $q->whereRaw('1 = 0');
+                    }
                 }
             ])
             ->withAvg([
                 'ratings as average_rating' => function ($q) {
                     $q->where('status', 1);
                 }
-            ], 'rating')
-            ->where('author', '!=', auth()->id())
-            ->whereNotIn('product_id', $allCompletedProductIds)
-            ->filter([
+            ], 'rating');
+
+        if ($userId) {
+            $query->where('author', '!=', $userId);
+        }
+
+        if (!empty($allCompletedProductIds)) {
+            $query->whereNotIn('product_id', $allCompletedProductIds);
+        }
+
+        $query->filter([
                 'category_id' => $filters['category_id'] ?? null,
                 'category_sub_id' => $filters['category_sub_id'] ?? null,
                 'search' => $filters['search'] ?? null,
@@ -265,6 +294,18 @@ class ProductCategoryRepository implements ProductCategoryInterface
         try {
             $request = request();
 
+            $userId = 'guest';
+            try {
+                if ($token = \Tymon\JWTAuth\Facades\JWTAuth::getToken()) {
+                    $user = \Tymon\JWTAuth\Facades\JWTAuth::authenticate($token);
+                    if ($user) {
+                        $userId = $user->users_id;
+                    }
+                }
+            } catch (\Exception $e) {
+                
+            }
+
             ProductView::create([
                 'product_id' => $productId,
                 'useragent' => $request->userAgent(),
@@ -272,7 +313,7 @@ class ProductCategoryRepository implements ProductCategoryInterface
                 'remote_addr' => $request->ip(),
                 'x_forwarded_for' => $request->header('X-Forwarded-For'),
                 'created' => now(),
-                'author' => auth()->check() ? auth()->id() : 'guest',
+                'author' => $userId,
                 'status' => 1
             ]);
         } catch (\Exception $e) {

@@ -51,12 +51,13 @@ Route::get('/category-subs', [CategorySubController::class, 'index']);
 // category sub end
 
 // product start
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
 Route::middleware(JwtMiddleware::class)->group(function () {
     Route::post('/products/read-new', [ProductController::class, 'readNewProducts']);
     Route::post('/product', [ProductController::class, 'storeProduct']);
-    Route::get('/products', [ProductController::class, 'index']);
     Route::get('/my-products', [ProductController::class, 'myProducts']);
-    Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/my-trade-history', [ProductController::class, 'tradeHistory']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::post('/products/{id}', [ProductController::class, 'update']);
