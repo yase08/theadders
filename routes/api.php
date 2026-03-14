@@ -149,3 +149,8 @@ Route::middleware(JwtMiddleware::class)->group(function () {
     Route::get('/report-user-reasons', [ReportController::class, 'getUserReportReasons']);
     Route::post('/users/{userId}/report', [ReportController::class, 'reportUser']);
 });
+
+use App\Http\Controllers\DeviceController;
+Route::post('/device/check', [DeviceController::class, 'check']);
+Route::post('/device/register', [DeviceController::class, 'register']);
+
