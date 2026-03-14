@@ -153,4 +153,5 @@ Route::middleware(JwtMiddleware::class)->group(function () {
 use App\Http\Controllers\DeviceController;
 Route::post('/device/check', [DeviceController::class, 'check']);
 Route::post('/device/register', [DeviceController::class, 'register']);
+Route::post('/device/reset', [DeviceController::class, 'reset']);
 

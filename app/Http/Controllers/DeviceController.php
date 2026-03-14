@@ -42,4 +42,17 @@ class DeviceController extends Controller
             'data' => $device
         ], 201);
     }
+
+    public function reset(Request $request)
+    {
+        $request->validate([
+            'device_id' => 'required|string|max:255',
+        ]);
+
+        DeviceRegistration::where('device_id', $request->device_id)->delete();
+
+        return response()->json([
+            'message' => 'success'
+        ], 200);
+    }
 }
