@@ -54,6 +54,16 @@ class AuthController extends Controller
             $user->firebase_uid = (string) $user->users_id;
             $user->save();
 
+            if ($req->filled('device_id')) {
+                \App\Models\DeviceRegistration::updateOrCreate(
+                    ['device_id' => $req->device_id],
+                    [
+                        'user_id' => $user->users_id,
+                        'platform' => $req->platform,
+                    ]
+                );
+            }
+
             DB::commit();
 
             return response()->json([

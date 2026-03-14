@@ -21,6 +21,8 @@ class SignUpRequest extends FormRequest
             'phone' => 'nullable',
             'firebase_uid' => 'nullable|string|unique:users,firebase_uid',
             'password' => 'required|min:6',
+            'device_id' => 'nullable|string|max:255',
+            'platform' => 'nullable|string|in:android,ios',
         ];
     }
 
